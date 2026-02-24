@@ -37,7 +37,7 @@ class AppTheme {
         ),
       ),
       
-      bottomNavigationBarTheme: const BottomNavigationBarTheme(
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: secondaryDark,
         selectedItemColor: accentGold,
         unselectedItemColor: textGray,
@@ -45,11 +45,11 @@ class AppTheme {
         elevation: 8,
       ),
       
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         color: cardBackground,
         elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
       ),
       
