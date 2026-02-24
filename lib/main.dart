@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'utils/theme.dart';
 import 'utils/constants.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter binding is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  await Firebase.initializeApp();
+  
   runApp(const MyApp());
 }
 
@@ -54,7 +61,7 @@ class SplashScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Setting up...',
+              'Connecting to Firebase...',
               style: TextStyle(color: AppTheme.textGray),
             ),
           ],
