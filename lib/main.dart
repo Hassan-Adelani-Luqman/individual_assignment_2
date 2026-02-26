@@ -5,6 +5,8 @@ import 'utils/theme.dart';
 import 'utils/constants.dart';
 import 'providers/auth_provider.dart';
 import 'providers/listings_provider.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/email_verification_screen.dart';
 
 void main() async {
   // Ensure Flutter binding is initialized
@@ -49,16 +51,14 @@ class AuthWrapper extends StatelessWidget {
           return const SplashScreen(message: 'Initializing...');
         }
         
-        // User not authenticated - show login placeholder
+        // User not authenticated - show login screen
         if (authProvider.authState == AuthState.unauthenticated) {
-          // TODO: Replace with LoginScreen in Phase 6
-          return const SplashScreen(message: 'Login Screen (Phase 6)');
+          return const LoginScreen();
         }
         
         // User needs email verification
         if (authProvider.authState == AuthState.needsVerification) {
-          // TODO: Replace with EmailVerificationScreen in Phase 6
-          return const SplashScreen(message: 'Email Verification (Phase 6)');
+          return const EmailVerificationScreen();
         }
         
         // User authenticated - show main app
@@ -70,9 +70,9 @@ class AuthWrapper extends StatelessWidget {
             Provider.of<ListingsProvider>(context, listen: false)
                 .initializeUserListingsListener(authProvider.user!.uid);
           }
-          // TODO: Replace with BottomNavigation in Phase 7
+          // TODO: Replace with BottomNavigation in Phase 9
           return SplashScreen(
-            message: 'Welcome ${authProvider.userProfile?.displayName ?? "User"}!',
+            message: 'Welcome ${authProvider.userProfile?.displayName ?? "User"}!\n\nDirectory & CRUD UI coming in Phase 7',
           );
         }
         
