@@ -7,6 +7,7 @@ import 'providers/auth_provider.dart';
 import 'providers/listings_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/email_verification_screen.dart';
+import 'screens/home/directory_screen.dart';
 
 void main() async {
   // Ensure Flutter binding is initialized
@@ -70,10 +71,8 @@ class AuthWrapper extends StatelessWidget {
             Provider.of<ListingsProvider>(context, listen: false)
                 .initializeUserListingsListener(authProvider.user!.uid);
           }
-          // TODO: Replace with BottomNavigation in Phase 9
-          return SplashScreen(
-            message: 'Welcome ${authProvider.userProfile?.displayName ?? "User"}!\n\nDirectory & CRUD UI coming in Phase 7',
-          );
+          // Show directory screen (will be wrapped in BottomNavigation in Phase 9)
+          return const DirectoryScreen();
         }
         
         // Fallback
