@@ -6,20 +6,14 @@ class ListingCard extends StatelessWidget {
   final ListingModel listing;
   final VoidCallback onTap;
 
-  const ListingCard({
-    super.key,
-    required this.listing,
-    required this.onTap,
-  });
+  const ListingCard({super.key, required this.listing, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       color: AppTheme.secondaryDark,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: InkWell(
         onTap: onTap,
@@ -92,10 +86,7 @@ class ListingCard extends StatelessWidget {
               // Description
               Text(
                 listing.description,
-                style: const TextStyle(
-                  color: AppTheme.textWhite,
-                  fontSize: 14,
-                ),
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

@@ -8,7 +8,7 @@ class AuthService {
 
   // Stream of auth state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-  
+
   // Get current user
   User? get currentUser => _auth.currentUser;
 
@@ -20,10 +20,8 @@ class AuthService {
   }) async {
     try {
       // Create user account
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       // Send email verification
       await userCredential.user!.sendEmailVerification();
@@ -46,15 +44,9 @@ class AuthService {
         'message': 'Account created! Please verify your email.',
       };
     } on FirebaseAuthException catch (e) {
-      return {
-        'success': false,
-        'message': _getAuthErrorMessage(e.code),
-      };
+      return {'success': false, 'message': _getAuthErrorMessage(e.code)};
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'An unexpected error occurred',
-      };
+      return {'success': false, 'message': 'An unexpected error occurred'};
     }
   }
 
@@ -79,20 +71,11 @@ class AuthService {
       //   };
       // }
 
-      return {
-        'success': true,
-        'message': 'Login successful',
-      };
+      return {'success': true, 'message': 'Login successful'};
     } on FirebaseAuthException catch (e) {
-      return {
-        'success': false,
-        'message': _getAuthErrorMessage(e.code),
-      };
+      return {'success': false, 'message': _getAuthErrorMessage(e.code)};
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'An unexpected error occurred',
-      };
+      return {'success': false, 'message': 'An unexpected error occurred'};
     }
   }
 
@@ -120,7 +103,10 @@ class AuthService {
   // Get user profile from Firestore
   Future<UserModel?> getUserProfile(String uid) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .get();
       if (doc.exists) {
         return UserModel.fromFirestore(doc);
       }
@@ -137,15 +123,9 @@ class AuthService {
   ) async {
     try {
       await _firestore.collection('users').doc(uid).update(data);
-      return {
-        'success': true,
-        'message': 'Profile updated successfully',
-      };
+      return {'success': true, 'message': 'Profile updated successfully'};
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Failed to update profile',
-      };
+      return {'success': false, 'message': 'Failed to update profile'};
     }
   }
 
@@ -158,10 +138,7 @@ class AuthService {
         'message': 'Password reset email sent. Please check your inbox.',
       };
     } on FirebaseAuthException catch (e) {
-      return {
-        'success': false,
-        'message': _getAuthErrorMessage(e.code),
-      };
+      return {'success': false, 'message': _getAuthErrorMessage(e.code)};
     } catch (e) {
       return {
         'success': false,

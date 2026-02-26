@@ -19,7 +19,11 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);      final listingsProvider = Provider.of<ListingsProvider>(context, listen: false);      
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final listingsProvider = Provider.of<ListingsProvider>(
+        context,
+        listen: false,
+      );
       if (authProvider.user != null) {
         listingsProvider.initializeUserListingsListener(authProvider.user!.uid);
       }
@@ -44,18 +48,11 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.login,
-                size: 80,
-                color: AppTheme.textGray,
-              ),
+              Icon(Icons.login, size: 80, color: AppTheme.textGray),
               SizedBox(height: 16),
               Text(
                 'Please log in to view your listings',
-                style: TextStyle(
-                  color: AppTheme.textGray,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: AppTheme.textGray, fontSize: 16),
               ),
             ],
           ),
@@ -91,9 +88,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
           // Loading state
           if (provider.isLoading) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.accentGold,
-              ),
+              child: CircularProgressIndicator(color: AppTheme.accentGold),
             );
           }
 
@@ -103,11 +98,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 80,
-                    color: Colors.red,
-                  ),
+                  const Icon(Icons.error_outline, size: 80, color: Colors.red),
                   const SizedBox(height: 16),
                   Text(
                     'Error: ${provider.error}',
@@ -120,7 +111,9 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      provider.initializeUserListingsListener(authProvider.user!.uid);
+                      provider.initializeUserListingsListener(
+                        authProvider.user!.uid,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.accentGold,
@@ -141,11 +134,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.inbox,
-                    size: 80,
-                    color: AppTheme.textGray,
-                  ),
+                  const Icon(Icons.inbox, size: 80, color: AppTheme.textGray),
                   const SizedBox(height: 16),
                   const Text(
                     'No listings yet',
@@ -158,10 +147,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                   const SizedBox(height: 8),
                   const Text(
                     'Create your first listing to get started',
-                    style: TextStyle(
-                      color: AppTheme.textGray,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: AppTheme.textGray, fontSize: 14),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -204,10 +190,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                 decoration: const BoxDecoration(
                   color: AppTheme.secondaryDark,
                   border: Border(
-                    bottom: BorderSide(
-                      color: AppTheme.primaryDark,
-                      width: 1,
-                    ),
+                    bottom: BorderSide(color: AppTheme.primaryDark, width: 1),
                   ),
                 ),
                 child: Row(
@@ -244,9 +227,8 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ListingDetailScreen(
-                                listing: listing,
-                              ),
+                              builder: (context) =>
+                                  ListingDetailScreen(listing: listing),
                             ),
                           );
                         },

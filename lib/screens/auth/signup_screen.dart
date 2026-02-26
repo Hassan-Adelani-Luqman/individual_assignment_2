@@ -32,7 +32,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _handleSignup() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
+
       final success = await authProvider.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -105,9 +105,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 24),
                 Text(
                   'Join ${AppConstants.appName}',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontSize: 24,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineLarge?.copyWith(fontSize: 24),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),

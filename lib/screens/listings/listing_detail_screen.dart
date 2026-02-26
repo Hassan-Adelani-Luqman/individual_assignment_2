@@ -10,10 +10,7 @@ import 'edit_listing_screen.dart';
 class ListingDetailScreen extends StatelessWidget {
   final ListingModel listing;
 
-  const ListingDetailScreen({
-    super.key,
-    required this.listing,
-  });
+  const ListingDetailScreen({super.key, required this.listing});
 
   Future<void> _launchPhone(String phoneNumber) async {
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
@@ -57,7 +54,8 @@ class ListingDetailScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditListingScreen(listing: listing),
+                        builder: (context) =>
+                            EditListingScreen(listing: listing),
                       ),
                     );
                   },
@@ -186,7 +184,10 @@ class ListingDetailScreen extends StatelessWidget {
                         markers: {
                           Marker(
                             markerId: MarkerId(listing.id ?? listing.name),
-                            position: LatLng(listing.latitude, listing.longitude),
+                            position: LatLng(
+                              listing.latitude,
+                              listing.longitude,
+                            ),
                             infoWindow: InfoWindow(
                               title: listing.name,
                               snippet: listing.category,
@@ -205,7 +206,8 @@ class ListingDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
-                    onPressed: () => _launchMaps(listing.latitude, listing.longitude),
+                    onPressed: () =>
+                        _launchMaps(listing.latitude, listing.longitude),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.accentGold,
                       foregroundColor: AppTheme.primaryDark,
@@ -259,10 +261,7 @@ class ListingDetailScreen extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          const Icon(
-                            Icons.phone,
-                            color: AppTheme.accentGold,
-                          ),
+                          const Icon(Icons.phone, color: AppTheme.accentGold),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
@@ -299,7 +298,8 @@ class ListingDetailScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   // Address
                   InkWell(
-                    onTap: () => _launchMaps(listing.latitude, listing.longitude),
+                    onTap: () =>
+                        _launchMaps(listing.latitude, listing.longitude),
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.all(16),

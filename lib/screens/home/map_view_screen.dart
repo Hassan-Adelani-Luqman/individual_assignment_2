@@ -28,8 +28,12 @@ class _MapViewScreenState extends State<MapViewScreen> {
   }
 
   void _createMarkers() {
-    final listingsProvider = Provider.of<ListingsProvider>(context, listen: false);
-    final listings = listingsProvider.filteredListings;
+    final listingsProvider = Provider.of<ListingsProvider>(
+      context,
+      listen: false,
+    );
+    // Use allListings instead of filteredListings to avoid index requirement
+    final listings = listingsProvider.allListings;
 
     setState(() {
       _markers = listings.map((listing) {
@@ -117,9 +121,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
         builder: (context, provider, _) {
           if (provider.isLoading) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.accentGold,
-              ),
+              child: CircularProgressIndicator(color: AppTheme.accentGold),
             );
           }
 
@@ -128,11 +130,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 80,
-                    color: Colors.red,
-                  ),
+                  const Icon(Icons.error_outline, size: 80, color: Colors.red),
                   const SizedBox(height: 16),
                   Text(
                     'Error: ${provider.error}',
@@ -171,7 +169,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                 zoomControlsEnabled: false,
                 mapToolbarEnabled: false,
               ),
-              
+
               // Selected listing card
               if (_selectedListing != null)
                 Positioned(
@@ -189,9 +187,8 @@ class _MapViewScreenState extends State<MapViewScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ListingDetailScreen(
-                              listing: _selectedListing!,
-                            ),
+                            builder: (context) =>
+                                ListingDetailScreen(listing: _selectedListing!),
                           ),
                         );
                       },
@@ -206,7 +203,8 @@ class _MapViewScreenState extends State<MapViewScreen> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         _selectedListing!.name,
@@ -223,8 +221,11 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.accentGold.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(6),
+                                          color: AppTheme.accentGold
+                                              .withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                         ),
                                         child: Text(
                                           _selectedListing!.category,
@@ -239,7 +240,10 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.close, color: AppTheme.textGray),
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: AppTheme.textGray,
+                                  ),
                                   onPressed: () {
                                     setState(() {
                                       _selectedListing = null;

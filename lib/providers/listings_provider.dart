@@ -10,7 +10,7 @@ class ListingsProvider with ChangeNotifier {
   List<ListingModel> _allListings = [];
   List<ListingModel> _filteredListings = [];
   List<ListingModel> _userListings = [];
-  
+
   ListingsState _state = ListingsState.loading;
   String? _errorMessage;
   bool _isLoading = false;
@@ -48,16 +48,18 @@ class ListingsProvider with ChangeNotifier {
 
   // Initialize listener for user's listings
   void initializeUserListingsListener(String userId) {
-    _firestoreService.getUserListingsStream(userId).listen(
-      (listings) {
-        _userListings = listings;
-        notifyListeners();
-      },
-      onError: (error) {
-        _errorMessage = error.toString();
-        notifyListeners();
-      },
-    );
+    _firestoreService
+        .getUserListingsStream(userId)
+        .listen(
+          (listings) {
+            _userListings = listings;
+            notifyListeners();
+          },
+          onError: (error) {
+            _errorMessage = error.toString();
+            notifyListeners();
+          },
+        );
   }
 
   // Apply search and category filters
@@ -67,10 +69,18 @@ class ListingsProvider with ChangeNotifier {
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
       _filteredListings = _filteredListings
-          .where((listing) =>
-              listing.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              listing.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              listing.address.toLowerCase().contains(_searchQuery.toLowerCase()))
+          .where(
+            (listing) =>
+                listing.name.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                listing.description.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                listing.address.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ),
+          )
           .toList();
     }
 

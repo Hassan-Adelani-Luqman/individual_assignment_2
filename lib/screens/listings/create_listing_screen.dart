@@ -102,10 +102,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -142,7 +139,10 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final listingsProvider = Provider.of<ListingsProvider>(context, listen: false);
+      final listingsProvider = Provider.of<ListingsProvider>(
+        context,
+        listen: false,
+      );
 
       await listingsProvider.createListing(
         name: _nameController.text.trim(),
@@ -262,10 +262,12 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                 ),
               ),
               items: AppConstants.allCategories
-                  .map((category) => DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      ))
+                  .map(
+                    (category) => DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) {
                 setState(() => _selectedCategory = value);
@@ -418,12 +420,16 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                   child: TextFormField(
                     controller: _latitudeController,
                     style: const TextStyle(color: AppTheme.textWhite),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Latitude',
                       labelStyle: const TextStyle(color: AppTheme.textGray),
                       hintText: '-1.9403',
-                      hintStyle: TextStyle(color: AppTheme.textGray.withOpacity(0.5)),
+                      hintStyle: TextStyle(
+                        color: AppTheme.textGray.withOpacity(0.5),
+                      ),
                       filled: true,
                       fillColor: AppTheme.secondaryDark,
                       border: OutlineInputBorder(
@@ -447,12 +453,16 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                   child: TextFormField(
                     controller: _longitudeController,
                     style: const TextStyle(color: AppTheme.textWhite),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Longitude',
                       labelStyle: const TextStyle(color: AppTheme.textGray),
                       hintText: '30.0590',
-                      hintStyle: TextStyle(color: AppTheme.textGray.withOpacity(0.5)),
+                      hintStyle: TextStyle(
+                        color: AppTheme.textGray.withOpacity(0.5),
+                      ),
                       filled: true,
                       fillColor: AppTheme.secondaryDark,
                       border: OutlineInputBorder(

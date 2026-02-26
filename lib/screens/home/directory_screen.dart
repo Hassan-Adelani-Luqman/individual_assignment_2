@@ -41,9 +41,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const MapViewScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const MapViewScreen()),
               );
             },
           ),
@@ -69,8 +67,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             child: TextField(
               controller: _searchController,
               onChanged: (value) {
-                Provider.of<ListingsProvider>(context, listen: false)
-                    .updateSearchQuery(value);
+                Provider.of<ListingsProvider>(
+                  context,
+                  listen: false,
+                ).updateSearchQuery(value);
               },
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: InputDecoration(
@@ -78,14 +78,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 hintStyle: const TextStyle(color: AppTheme.textGray),
                 filled: true,
                 fillColor: AppTheme.secondaryDark,
-                prefixIcon: const Icon(Icons.search, color: AppTheme.accentGold),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: AppTheme.accentGold,
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, color: AppTheme.textGray),
                         onPressed: () {
                           _searchController.clear();
-                          Provider.of<ListingsProvider>(context, listen: false)
-                              .updateSearchQuery('');
+                          Provider.of<ListingsProvider>(
+                            context,
+                            listen: false,
+                          ).updateSearchQuery('');
                         },
                       )
                     : null,

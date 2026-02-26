@@ -33,17 +33,19 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   Future<void> _handleResendEmail() async {
     setState(() => _isResending = true);
-    
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.resendVerificationEmail();
-    
+
     setState(() => _isResending = false);
-    
+
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Verification email sent! Please check your inbox.'),
+            content: const Text(
+              'Verification email sent! Please check your inbox.',
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -124,20 +126,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 ),
                 child: Column(
                   children: [
-                    _buildStep(
-                      '1',
-                      'Open your email inbox',
-                    ),
+                    _buildStep('1', 'Open your email inbox'),
                     const SizedBox(height: 12),
-                    _buildStep(
-                      '2',
-                      'Click the verification link',
-                    ),
+                    _buildStep('2', 'Click the verification link'),
                     const SizedBox(height: 12),
-                    _buildStep(
-                      '3',
-                      'Return to the app',
-                    ),
+                    _buildStep('3', 'Return to the app'),
                   ],
                 ),
               ),
@@ -157,10 +150,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   SizedBox(width: 12),
                   Text(
                     'Checking verification status...',
-                    style: TextStyle(
-                      color: AppTheme.textGray,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: AppTheme.textGray, fontSize: 14),
                   ),
                 ],
               ),
@@ -202,10 +192,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 onPressed: _handleSignOut,
                 child: const Text(
                   'Sign Out',
-                  style: TextStyle(
-                    color: AppTheme.textGray,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: AppTheme.textGray, fontSize: 14),
                 ),
               ),
             ],
@@ -240,10 +227,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: AppTheme.textWhite,
-              fontSize: 15,
-            ),
+            style: const TextStyle(color: AppTheme.textWhite, fontSize: 15),
           ),
         ),
       ],

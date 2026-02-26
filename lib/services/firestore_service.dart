@@ -10,8 +10,11 @@ class FirestoreService {
         .collection('listings')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => ListingModel.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ListingModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   // Stream of user's listings (real-time updates)
@@ -21,18 +24,18 @@ class FirestoreService {
         .where('createdBy', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => ListingModel.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ListingModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   // Create new listing
   Future<Map<String, dynamic>> createListing(ListingModel listing) async {
     try {
       await _firestore.collection('listings').add(listing.toFirestore());
-      return {
-        'success': true,
-        'message': 'Listing created successfully',
-      };
+      return {'success': true, 'message': 'Listing created successfully'};
     } catch (e) {
       return {
         'success': false,
@@ -48,10 +51,7 @@ class FirestoreService {
           .collection('listings')
           .doc(listing.id)
           .update(listing.toFirestore());
-      return {
-        'success': true,
-        'message': 'Listing updated successfully',
-      };
+      return {'success': true, 'message': 'Listing updated successfully'};
     } catch (e) {
       return {
         'success': false,
@@ -64,10 +64,7 @@ class FirestoreService {
   Future<Map<String, dynamic>> deleteListing(String listingId) async {
     try {
       await _firestore.collection('listings').doc(listingId).delete();
-      return {
-        'success': true,
-        'message': 'Listing deleted successfully',
-      };
+      return {'success': true, 'message': 'Listing deleted successfully'};
     } catch (e) {
       return {
         'success': false,
@@ -79,8 +76,10 @@ class FirestoreService {
   // Get single listing
   Future<ListingModel?> getListing(String listingId) async {
     try {
-      DocumentSnapshot doc =
-          await _firestore.collection('listings').doc(listingId).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('listings')
+          .doc(listingId)
+          .get();
       if (doc.exists) {
         return ListingModel.fromFirestore(doc);
       }
@@ -115,7 +114,10 @@ class FirestoreService {
         .where('category', isEqualTo: category)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => ListingModel.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ListingModel.fromFirestore(doc))
+              .toList(),
+        );
   }
 }

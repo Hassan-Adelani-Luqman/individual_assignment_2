@@ -11,10 +11,7 @@ import '../../utils/validators.dart';
 class EditListingScreen extends StatefulWidget {
   final ListingModel listing;
 
-  const EditListingScreen({
-    super.key,
-    required this.listing,
-  });
+  const EditListingScreen({super.key, required this.listing});
 
   @override
   State<EditListingScreen> createState() => _EditListingScreenState();
@@ -40,8 +37,12 @@ class _EditListingScreenState extends State<EditListingScreen> {
     // Pre-populate with existing data
     _nameController = TextEditingController(text: widget.listing.name);
     _addressController = TextEditingController(text: widget.listing.address);
-    _contactController = TextEditingController(text: widget.listing.contactNumber);
-    _descriptionController = TextEditingController(text: widget.listing.description);
+    _contactController = TextEditingController(
+      text: widget.listing.contactNumber,
+    );
+    _descriptionController = TextEditingController(
+      text: widget.listing.description,
+    );
     _latitudeController = TextEditingController(
       text: widget.listing.latitude.toStringAsFixed(6),
     );
@@ -125,10 +126,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -154,7 +152,10 @@ class _EditListingScreenState extends State<EditListingScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final listingsProvider = Provider.of<ListingsProvider>(context, listen: false);
+      final listingsProvider = Provider.of<ListingsProvider>(
+        context,
+        listen: false,
+      );
 
       await listingsProvider.updateListing(
         listingId: widget.listing.id ?? '',
@@ -215,10 +216,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -233,7 +231,10 @@ class _EditListingScreenState extends State<EditListingScreen> {
     setState(() => _isDeleting = true);
 
     try {
-      final listingsProvider = Provider.of<ListingsProvider>(context, listen: false);
+      final listingsProvider = Provider.of<ListingsProvider>(
+        context,
+        listen: false,
+      );
       await listingsProvider.deleteListing(widget.listing.id ?? '');
 
       if (mounted) {
@@ -352,10 +353,12 @@ class _EditListingScreenState extends State<EditListingScreen> {
                 ),
               ),
               items: AppConstants.allCategories
-                  .map((category) => DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      ))
+                  .map(
+                    (category) => DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) {
                 setState(() => _selectedCategory = value);
@@ -508,12 +511,16 @@ class _EditListingScreenState extends State<EditListingScreen> {
                   child: TextFormField(
                     controller: _latitudeController,
                     style: const TextStyle(color: AppTheme.textWhite),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Latitude',
                       labelStyle: const TextStyle(color: AppTheme.textGray),
                       hintText: '-1.9403',
-                      hintStyle: TextStyle(color: AppTheme.textGray.withOpacity(0.5)),
+                      hintStyle: TextStyle(
+                        color: AppTheme.textGray.withOpacity(0.5),
+                      ),
                       filled: true,
                       fillColor: AppTheme.secondaryDark,
                       border: OutlineInputBorder(
@@ -537,12 +544,16 @@ class _EditListingScreenState extends State<EditListingScreen> {
                   child: TextFormField(
                     controller: _longitudeController,
                     style: const TextStyle(color: AppTheme.textWhite),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Longitude',
                       labelStyle: const TextStyle(color: AppTheme.textGray),
                       hintText: '30.0590',
-                      hintStyle: TextStyle(color: AppTheme.textGray.withOpacity(0.5)),
+                      hintStyle: TextStyle(
+                        color: AppTheme.textGray.withOpacity(0.5),
+                      ),
                       filled: true,
                       fillColor: AppTheme.secondaryDark,
                       border: OutlineInputBorder(

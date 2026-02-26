@@ -7,7 +7,7 @@ enum AuthState { loading, authenticated, unauthenticated, needsVerification }
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
-  
+
   User? _user;
   UserModel? _userProfile;
   AuthState _authState = AuthState.loading;
@@ -30,13 +30,13 @@ class AuthProvider with ChangeNotifier {
   void _initAuth() {
     _authService.authStateChanges.listen((User? user) async {
       _user = user;
-      
+
       if (user != null) {
         // Email verification check DISABLED FOR TESTING
         // if (user.emailVerified) {
-          // Load user profile from Firestore
-          _userProfile = await _authService.getUserProfile(user.uid);
-          _authState = AuthState.authenticated;
+        // Load user profile from Firestore
+        _userProfile = await _authService.getUserProfile(user.uid);
+        _authState = AuthState.authenticated;
         // } else {
         //   _authState = AuthState.needsVerification;
         // }
@@ -44,7 +44,7 @@ class AuthProvider with ChangeNotifier {
         _userProfile = null;
         _authState = AuthState.unauthenticated;
       }
-      
+
       notifyListeners();
     });
   }
@@ -76,17 +76,11 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Sign in
-  Future<bool> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<bool> signIn({required String email, required String password}) async {
     _setLoading(true);
     _errorMessage = null;
 
-    final result = await _authService.signIn(
-      email: email,
-      password: password,
-    );
+    final result = await _authService.signIn(email: email, password: password);
 
     _setLoading(false);
 
@@ -109,7 +103,7 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
     final result = await _authService.resendVerificationEmail();
     _setLoading(false);
-    
+
     if (result['success']) {
       return true;
     } else {
@@ -129,10 +123,9 @@ class AuthProvider with ChangeNotifier {
   // Update notification preference
   Future<void> updateNotificationPreference(bool enabled) async {
     if (_user != null) {
-      await _authService.updateUserProfile(
-        _user!.uid,
-        {'notificationsEnabled': enabled},
-      );
+      await _authService.updateUserProfile(_user!.uid, {
+        'notificationsEnabled': enabled,
+      });
       _userProfile = await _authService.getUserProfile(_user!.uid);
       notifyListeners();
     }

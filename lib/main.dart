@@ -51,30 +51,34 @@ class AuthWrapper extends StatelessWidget {
         if (authProvider.authState == AuthState.loading) {
           return const SplashScreen(message: 'Initializing...');
         }
-        
+
         // User not authenticated - show login screen
         if (authProvider.authState == AuthState.unauthenticated) {
           return const LoginScreen();
         }
-        
+
         // User needs email verification
         if (authProvider.authState == AuthState.needsVerification) {
           return const EmailVerificationScreen();
         }
-        
+
         // User authenticated - show main app
         if (authProvider.authState == AuthState.authenticated) {
           // Initialize listings listener for authenticated user
           if (authProvider.user != null) {
-            Provider.of<ListingsProvider>(context, listen: false)
-                .initializeListingsListener();
-            Provider.of<ListingsProvider>(context, listen: false)
-                .initializeUserListingsListener(authProvider.user!.uid);
+            Provider.of<ListingsProvider>(
+              context,
+              listen: false,
+            ).initializeListingsListener();
+            Provider.of<ListingsProvider>(
+              context,
+              listen: false,
+            ).initializeUserListingsListener(authProvider.user!.uid);
           }
           // Show directory screen (will be wrapped in BottomNavigation in Phase 9)
           return const DirectoryScreen();
         }
-        
+
         // Fallback
         return const SplashScreen(message: 'Loading...');
       },
@@ -85,11 +89,8 @@ class AuthWrapper extends StatelessWidget {
 // Temporary splash screen - will be replaced with authentication flow
 class SplashScreen extends StatelessWidget {
   final String message;
-  
-  const SplashScreen({
-    super.key,
-    this.message = 'Connecting to Firebase...',
-  });
+
+  const SplashScreen({super.key, this.message = 'Connecting to Firebase...'});
 
   @override
   Widget build(BuildContext context) {
