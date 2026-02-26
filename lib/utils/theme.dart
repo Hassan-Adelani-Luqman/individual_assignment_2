@@ -15,7 +15,7 @@ class AppTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: primaryDark,
       primaryColor: accentGold,
-      
+
       colorScheme: const ColorScheme.dark(
         primary: accentGold,
         secondary: accentGold,
@@ -24,7 +24,7 @@ class AppTheme {
         onSecondary: primaryDark,
         onSurface: textWhite,
       ),
-      
+
       appBarTheme: const AppBarTheme(
         backgroundColor: primaryDark,
         elevation: 0,
@@ -36,7 +36,7 @@ class AppTheme {
           fontWeight: FontWeight.bold,
         ),
       ),
-      
+
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: secondaryDark,
         selectedItemColor: accentGold,
@@ -44,7 +44,7 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      
+
       cardTheme: const CardThemeData(
         color: cardBackground,
         elevation: 2,
@@ -52,7 +52,7 @@ class AppTheme {
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
       ),
-      
+
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: secondaryDark,
@@ -75,7 +75,7 @@ class AppTheme {
         labelStyle: const TextStyle(color: textGray),
         hintStyle: const TextStyle(color: textGray),
       ),
-      
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: accentGold,
@@ -84,33 +84,25 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
-      
+
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: accentGold,
-          textStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
-      
+
       chipTheme: ChipThemeData(
         backgroundColor: secondaryDark,
         selectedColor: accentGold,
         labelStyle: const TextStyle(color: textWhite),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
-      
+
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
           color: textWhite,
@@ -132,18 +124,9 @@ class AppTheme {
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
-        bodyLarge: TextStyle(
-          color: textWhite,
-          fontSize: 16,
-        ),
-        bodyMedium: TextStyle(
-          color: textGray,
-          fontSize: 14,
-        ),
-        bodySmall: TextStyle(
-          color: textGray,
-          fontSize: 12,
-        ),
+        bodyLarge: TextStyle(color: textWhite, fontSize: 16),
+        bodyMedium: TextStyle(color: textGray, fontSize: 14),
+        bodySmall: TextStyle(color: textGray, fontSize: 12),
       ),
     );
   }

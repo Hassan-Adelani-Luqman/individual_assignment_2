@@ -6,10 +6,10 @@ import 'utils/constants.dart';
 void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
   await Firebase.initializeApp();
-  
+
   runApp(const MyApp());
 }
 
@@ -56,9 +56,7 @@ class SplashScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 48),
-            const CircularProgressIndicator(
-              color: AppTheme.accentGold,
-            ),
+            const CircularProgressIndicator(color: AppTheme.accentGold),
             const SizedBox(height: 16),
             const Text(
               'Connecting to Firebase...',
