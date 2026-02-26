@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ListingModel {
-  final String id;
+  final String? id;
   final String name;
   final String category;
   final String address;
@@ -17,7 +17,7 @@ class ListingModel {
   final String? imageUrl;
 
   ListingModel({
-    required this.id,
+    this.id,
     required this.name,
     required this.category,
     required this.address,

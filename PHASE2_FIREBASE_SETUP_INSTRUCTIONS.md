@@ -243,118 +243,291 @@ If you get "Permission denied" errors when testing CRUD operations, check these 
 
 ### Step 8: Configure Android for Firebase
 
-#### 8.1 Update Project-Level build.gradle
+**Important**: Your Flutter project uses **Kotlin DSL** with `.kts` files. There is **NO** `android/build.gradle` file!
 
-Open `android/build.gradle` and make these changes:
+---
 
-**Location**: `android/build.gradle`
+#### 8.1 Configure settings.gradle.kts (Project-Level Plugin Declaration)
 
-Find the `dependencies` section under `buildscript` and add the Google services plugin:
+**File to Edit**: `android/settings.gradle.kts`
 
-```gradle
-buildscript {
-    ext.kotlin_version = '1.9.10'
-    repositories {
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        // Add this line for Firebase
-        classpath 'com.google.gms:google-services:4.4.0'
-    }
-}
-```
-
-#### 8.2 Update App-Level build.gradle
-
-Open `android/app/build.gradle` and make these changes:
-
-**Location**: `android/app/build.gradle`
-
-1. **At the TOP of the file** (after the first line), add:
-```gradle
+**What it looks like NOW** (default Flutter project):
+```kotlin
 plugins {
-    id "com.android.application"
-    id "kotlin-android"
-    id "dev.flutter.flutter-gradle-plugin"
+    id("dev.flutter.flutter-plugin-loader") version "1.0.0"
+    id("com.android.application") version "8.11.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
 }
-
-// Add this line for Firebase
-apply plugin: 'com.google.gms.google-services'
 ```
 
-2. **Update minSdkVersion**:
-Find `android { defaultConfig {` section and change:
-```gradle
+**What you need to ADD** (add ONE line):
+```kotlin
+plugins {
+    id("dev.flutter.flutter-plugin-loader") version "1.0.0"
+    id("com.android.application") version "8.11.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+    id("com.google.gms.google-services") version "4.4.0" apply false  // ← ADD THIS LINE
+}
+```
+
+**Action**: Add the Google Services line INSIDE the plugins block, after the Kotlin line.
+
+**Verification**: 
+```bash
+# Check if you added it correctly
+grep "google-services" android/settings.gradle.kts
+```
+Expected output: `id("com.google.gms.google-services") version "4.4.0" apply false`
+
+---
+
+#### 8.2 Configure app/build.gradle.kts (App-Level Configuration)
+
+**File to Edit**: `android/app/build.gradle.kts`
+
+This file has **THREE changes** to make:
+
+---
+
+**CHANGE #1: Add Firebase Plugin**
+
+**Location**: At the very TOP of the file (lines 1-6)
+
+**BEFORE** (current):
+```kotlin
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("dev.flutter.flutter-gradle-plugin")
+}
+```
+
+**AFTER** (add one line):
+```kotlin
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")  // ← ADD THIS LINE
+}
+```
+
+---
+
+**CHANGE #2: Update minSdk and Add Multidex**
+
+**Location**: Inside `defaultConfig` block (around line 24-30)
+
+**BEFORE** (current):
+```kotlin
+    defaultConfig {
+        applicationId = "com.example.individual_assignment_2"
+        minSdk = flutter.minSdkVersion  // ← This line will change
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+```
+
+**AFTER** (change minSdk and add multiDexEnabled):
+```kotlin
+    defaultConfig {
+        applicationId = "com.example.individual_assignment_2"
+        minSdk = 21  // ← CHANGED from flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+        multiDexEnabled = true  // ← ADD THIS LINE
+    }
+```
+
+---
+
+**CHANGE #3: Add Dependencies**
+
+**Location**: At the BOTTOM of the file, AFTER the `flutter { }` block
+
+**BEFORE** (current - file ends like this):
+```kotlin
+flutter {
+    source = "../.."
+}
+```
+
+**AFTER** (add dependencies block):
+```kotlin
+flutter {
+    source = "../.."
+}
+
+dependencies {
+    implementation("androidx.multidex:multidex:2.0.1")
+}
+```
+
+---
+
+**Complete app/build.gradle.kts Reference** (for verification):
+
+After all changes, your file should look like this:
+
+```kotlin
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")  // ← ADDED
+}
+
 android {
     namespace = "com.example.individual_assignment_2"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
         applicationId = "com.example.individual_assignment_2"
-        // Change this from 21 to 21 (or higher if already higher)
-        minSdk = 21
+        minSdk = 21  // ← CHANGED
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        // Add this for multidex support
-        multiDexEnabled = true
+        multiDexEnabled = true  // ← ADDED
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
-```
 
-3. **Add dependencies at the bottom**:
-```gradle
+flutter {
+    source = "../.."
+}
+
 dependencies {
-    implementation 'com.android.support:multidex:1.0.3'
+    implementation("androidx.multidex:multidex:2.0.1")  // ← ADDED
 }
 ```
 
-#### 8.3 Update AndroidManifest.xml
+**Verification Commands**:
+```bash
+# Check if Firebase plugin is applied
+grep "google-services" android/app/build.gradle.kts
 
-Open `android/app/src/main/AndroidManifest.xml` and add internet permission:
+# Check if minSdk is set to 21
+grep "minSdk = 21" android/app/build.gradle.kts
 
-**Location**: `android/app/src/main/AndroidManifest.xml`
+# Check if multidex is enabled
+grep "multiDexEnabled" android/app/build.gradle.kts
 
-Add this BEFORE the `<application>` tag:
+# Check if dependencies block exists
+grep "androidx.multidex" android/app/build.gradle.kts
+```
+
+All four commands should return matches. If any don't, you missed that change!
+
+#### 8.3 Update AndroidManifest.xml (Add Permissions and Change App Name)
+
+**File to Edit**: `android/app/src/main/AndroidManifest.xml`
+
+This file needs **TWO changes**:
+
+---
+
+**CHANGE #1: Add Permissions**
+
+**Location**: AFTER `<manifest>` tag, BEFORE `<application>` tag (around line 2)
+
+**BEFORE** (current):
 ```xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.individual_assignment_2">
-    
-    <!-- Add these permissions -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:label="individual_assignment_2"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+```
+
+**AFTER** (add three permission lines):
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     
     <application
-        android:label="Kigali Services"
+        android:label="individual_assignment_2"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <!-- rest of the file -->
 ```
+
+---
+
+**CHANGE #2: Update App Label**
+
+**Location**: Inside `<application>` tag (same area as above)
+
+**BEFORE**:
+```xml
+    <application
+        android:label="individual_assignment_2"
+```
+
+**AFTER**:
+```xml
+    <application
+        android:label="Kigali Services"
+```
+
+---
+
+**Verification**:
+```bash
+# Check permissions were added
+grep "INTERNET" android/app/src/main/AndroidManifest.xml
+grep "ACCESS_FINE_LOCATION" android/app/src/main/AndroidManifest.xml
+
+# Check app label was changed
+grep "Kigali Services" android/app/src/main/AndroidManifest.xml
+```
+
+All three commands should return matches!
+
+---
+
+#### Step 8 Summary: What You Just Changed
+
+✅ **Changed 3 files total:**
+
+| File | What Changed | Why |
+|------|--------------|-----|
+| `android/settings.gradle.kts` | Added Google Services plugin declaration | Makes plugin available to app |
+| `android/app/build.gradle.kts` | 3 changes: Plugin, minSdk=21, multidex | Applies Firebase plugin and compatibility |
+| `android/app/src/main/AndroidManifest.xml` | Added permissions + changed label | Internet access for Firebase, location for maps |
+
+✅ **Quick Verification Checklist:**
+```bash
+# Run all these commands - all should show results:
+grep "google-services" android/settings.gradle.kts
+grep "google-services" android/app/build.gradle.kts
+grep "minSdk = 21" android/app/build.gradle.kts
+grep "multiDexEnabled" android/app/build.gradle.kts
+grep "androidx.multidex" android/app/build.gradle.kts
+grep "INTERNET" android/app/src/main/AndroidManifest.xml
+grep "Kigali Services" android/app/src/main/AndroidManifest.xml
+```
+
+If ANY command returns nothing, go back and check that file!
 
 ---
 
@@ -384,95 +557,94 @@ Add this BEFORE the `<application>` tag:
 
 ### Step 10: Initialize Firebase in Flutter App
 
-Create the Firebase initialization file:
+**File to Edit**: `lib/main.dart`
 
-**File**: `lib/firebase_options.dart`
+**What to Change**: The `main()` function needs to become `async` and initialize Firebase before running the app.
 
-```dart
-// This file will be auto-generated by FlutterFire CLI
-// For now, we'll initialize Firebase manually in main.dart
-```
+---
 
-Update your `main.dart`:
-
-**File**: `lib/main.dart`
-
-Add Firebase initialization:
-
+**BEFORE** (current Flutter default):
 ```dart
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'utils/theme.dart';
 import 'utils/constants.dart';
 
-void main() async {
-  // Ensure Flutter binding is initialized
+void main() {
+  runApp(const MyApp());
+}
+```
+
+**AFTER** (add Firebase initialization):
+```dart
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';  // ← ADD this import
+import 'utils/theme.dart';
+import 'utils/constants.dart';
+
+void main() async {  // ← ADD async
+  // ← ADD these 3 lines:
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase
   await Firebase.initializeApp();
   
   runApp(const MyApp());
 }
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      theme: AppTheme.darkTheme,
-      debugShowCheckedModeBanner: false,
-      home: const SplashScreen(),
-    );
-  }
-}
-
-// Temporary splash screen - will be replaced with authentication flow
-class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.location_city,
-              size: 80,
-              color: AppTheme.accentGold,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              AppConstants.appName,
-              style: Theme.of(context).textTheme.headlineLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              AppConstants.appTagline,
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(
-              color: AppTheme.accentGold,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Connecting to Firebase...',
-              style: TextStyle(color: AppTheme.textGray),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 ```
+
+---
+
+**What Each Line Does**:
+
+1. `import 'package:firebase_core/firebase_core.dart';`
+   - Imports Firebase initialization functions
+
+2. `void main() async {`
+   - Makes main function asynchronous (required for `await`)
+
+3. `WidgetsFlutterBinding.ensureInitialized();`
+   - Ensures Flutter is ready before Firebase initializes
+   - **Must be called FIRST** in async main()
+
+4. `await Firebase.initializeApp();`
+   - Initializes Firebase connection
+   - Waits for completion before continuing
+
+---
+
+**Optional: Update Splash Screen Text**
+
+While you're in `main.dart`, find the splash screen text (around line 60):
+
+**BEFORE**:
+```dart
+const Text(
+  'Setting up...',
+  style: TextStyle(color: AppTheme.textGray),
+),
+```
+
+**AFTER**:
+```dart
+const Text(
+  'Connecting to Firebase...',
+  style: TextStyle(color: AppTheme.textGray),
+),
+```
+
+---
+
+**Verification**:
+```bash
+# Check if Firebase import was added
+grep "firebase_core" lib/main.dart
+
+# Check if main is async
+grep "void main() async" lib/main.dart
+
+# Check if Firebase.initializeApp is called
+grep "Firebase.initializeApp" lib/main.dart
+```
+
+All three should return matches!
 
 ---
 
@@ -513,24 +685,41 @@ class SplashScreen extends StatelessWidget {
    - Solution: Ensure `Firebase.initializeApp()` is called before `runApp()`
    - Check that `WidgetsFlutterBinding.ensureInitialized()` is called first
 
-   **Error: "MinSdkVersion X is less than 21"**
-   - Solution: Update `android/app/build.gradle` to set `minSdk = 21`
+   **Error #1: "google-services.json is missing"**
+   - **Cause**: File not in correct location
+   - **Solution**: Verify file is in `android/app/` directory (NOT in `android/`)
+   - **Command**: `ls android/app/google-services.json`
+   - **Screenshot this error** 📸 for your Reflection PDF!
 
-   **Error: "Execution failed for task ':app:processDebugGoogleServices'"**
-   - Solution: Your `applicationId` in `build.gradle` doesn't match package name in `google-services.json`
-   - Fix: Update `applicationId` to match exactly, or re-download `google-services.json`
+   **Error #2: "FirebaseException: No Firebase App '[DEFAULT]' has been created"**
+   - **Cause**: Firebase not initialized before app starts
+   - **Solution**: Ensure `Firebase.initializeApp()` is called before `runApp()` in main.dart
+   - **Check**: `WidgetsFlutterBinding.ensureInitialized()` must be called first
+   - **Screenshot this error** 📸 for your Reflection PDF!
 
-   **Error: "MissingPluginException"**
-   - Solution: Run `flutter clean && flutter pub get` and rebuild
+   **Error #3: "MinSdkVersion X is less than 21"**
+   - **Cause**: Firebase requires minSdk 21 or higher
+   - **Solution**: Update `android/app/build.gradle.kts` → set `minSdk = 21`
+   - **Line to change**: `minSdk = flutter.minSdkVersion` → `minSdk = 21`
 
-5. **Take Screenshots** 📸
-   - Screenshot of app running successfully: `app-running-with-firebase.png`
-   - Screenshot of terminal showing successful Firebase init: `terminal-firebase-success.png`
+   **Error #4: "Execution failed for task ':app:processDebugGoogleServices'"**
+   - **Cause**: Package name mismatch
+   - **Check**: `applicationId` in `build.gradle.kts` must match package name in `google-services.json`
+   - **Solution**: Either update `applicationId` or re-download `google-services.json` with correct package name
 
----
+   **Error #5: "MissingPluginException"**
+   - **Cause**: Native code not rebuilt after adding plugins
+   - **Solution**: Run `flutter clean && flutter pub get` and rebuild app
+   - **For persistent issues**: Stop app, uninstall from device, then rebuild
 
-### Step 12: Verify Firestore Connection
-
+   **Error #6: "Could not find com.google.gms:google-services"**
+   - **Cause**: Google Services plugin not added to settings.gradle.kts
+   - **Solution**: Verify you added the plugin to `android/settings.gradle.kts` (NOT build.gradle!)
+   
+   **Error #7: "Plugin with id 'com.google.gms.google-services' not found"**
+   - **Cause**: Wrong file modified or syntax error
+   - **Solution**: Check `android/settings.gradle.kts` has: `id("com.google.gms.google-services") version "4.4.0" apply false`
+   - **Then**: Check `android/app/build.gradle.kts` has: `id("com.google.gms.google-services")` in plugins block
 Create a test file to verify Firestore is accessible:
 
 **File**: `lib/test_firebase.dart`
@@ -622,37 +811,90 @@ void main() async {
 
 Make sure you have captured these screenshots:
 
-1. ✅ `firebase-project-created.png` - Firebase project dashboard
-2. ✅ `firebase-auth-enabled.png` - Email/Password authentication enabled
-3. ✅ `firestore-database-created.png` - Firestore database created
-4. ✅ `firestore-security-rules.png` - Security rules configured
-5. ✅ `firestore-collections-created.png` - Initial collections created
-6. ✅ `android-app-registered.png` - Android app registered in Firebase
-7. ✅ `app-running-with-firebase.png` - App running successfully
-8. ✅ `terminal-firebase-success.png` - Terminal showing Firebase init success
-
-**Save all screenshots in a folder**: `documentation/screenshots/phase2/`
-
----
-
-## 🔍 Troubleshooting Checklist
-
-Before moving to Phase 3, verify:
-
-- [ ] Firebase project created and accessible
+1. ✅ `firebase-project-created.png` - Firebas in Firebase Console
 - [ ] Email/Password authentication enabled in Firebase Console
 - [ ] Firestore database created with test mode rules
 - [ ] Security rules updated and published
-- [ ] `google-services.json` in `android/app/` directory
-- [ ] `android/build.gradle` has Google services plugin
-- [ ] `android/app/build.gradle` has `apply plugin: 'com.google.gms.google-services'`
-- [ ] `minSdk` is set to 21 or higher
-- [ ] AndroidManifest.xml has internet permission
-- [ ] `Firebase.initializeApp()` added to main.dart
-- [ ] App builds and runs without errors
-- [ ] Terminal shows "Successfully initialized Firebase"
+- [ ] `google-services.json` in `android/app/` directory (verify with: `ls android/app/google-services.json`)
+- [ ] `android/settings.gradle.kts` has Google Services plugin in plugins block
+- [ ] `android/app/build.gradle.kts` has `id("com.google.gms.google-services")` in plugins block
+- [ ] `minSdk = 21` in `android/app/build.gradle.kts` defaultConfig
+- [ ] `multiDexEnabled = true` in `android/app/build.gradle.kts` defaultConfig
+- [ ] `dependencies` block with multidex at bottom of `android/app/build.gradle.kts`
+- [ ] AndroidManifest.xml has internet and location permissions
+- [ ] App label changed to "Kigali Services" in AndroidManifest.xml
+- [ ] `Firebase.initializeApp()` added to main.dart with `async`/`await`
+- [ ] `WidgetsFlutterBinding.ensureInitialized()` called before Firebase init
+- [ ] `flutter clean && flutter pub get` executed successfully
+- [ ] App builds without errors (`flutter build apk --debug` or `flutter run`)
+- [ ] App runs on emulator/device without crashes
+- [ ] Terminal shows "[firebase_core] Successfully initialized Firebase"
 - [ ] Git commit made with descriptive message
 - [ ] All screenshots captured and saved
+
+**Quick Verification Commands**:
+```bash
+# Verify google-services.json location
+ls android/app/google-services.json
+
+# Verify Kotlin DSL files exist
+ls android/settings.gradle.kts
+ls android/app/build.gradle.kts
+
+# Clean and rebuild
+flutter clean && flutter pub get
+
+# Check for errors
+flutter analyze
+
+**IMPORTANT**: You need at least 2 Firebase errors with screenshots for your Reflection PDF!
+
+As you go through this phase, document these errors if you encounter them:
+
+### Error Template (Use this format):
+
+**Error #X: [Error Title]**
+- **When it occurred**: [During which step]
+- **Error message**: [Exact error text]
+- **Screenshot**: 📸 [Attach screenshot of error]
+- **What I tried first**: [Initial troubleshooting attempts]
+- **Root cause**: [What actually caused the error]
+- **Solution applied**: [How you fixed it]
+- **Prevention**: [How to avoid this in future]
+
+### Recommended Errors to Document:
+
+1. **Kotlin DSL Configuration Confusion**
+   - Error when trying to follow Groovy syntax in Kotlin DSL files
+   - Shows importance of checking project structure first
+   - Good learning point about Flutter's evolution to Kotlin DSL
+
+2. **google-services.json Location Error**
+   - Classic mistake: putting file in wrong directory
+   - Screenshot the terminal showing file not found
+   - Screenshot the correct location after fixing
+
+3. **Package Name Mismatch** 
+   - applicationId doesn't match google-services.json
+   - Shows Firebase Console relationship to app config
+   - Screenshot both the error and Firebase console
+
+4. **minSdk Version Error**
+   - Firebase requires minSdk 21, project defaults to lower
+   - Screenshot build error before and successful build after fix
+   - Demonstrates Android compatibility requirements
+
+5. **Firebase Initialization Async Error**
+   - Forgetting `async`/`await` in main()
+   - Runtime crash with clear stack trace
+   - Shows importance of asynchronous initialization
+
+**Tips for Great Documentation**:
+- ✅ Take screenshot of error IMMEDIATELY when it occurs
+- ✅ Include full error message, not just highlighted part
+- ✅ Show your solution (code before and after)
+- ✅ Explain what you learned from the error
+- ✅ Be honest - professors value learning over perfection!ed and saved
 
 ---
 

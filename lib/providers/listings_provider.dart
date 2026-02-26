@@ -24,6 +24,7 @@ class ListingsProvider with ChangeNotifier {
   List<ListingModel> get userListings => _userListings;
   ListingsState get state => _state;
   String? get errorMessage => _errorMessage;
+  String? get error => _errorMessage; // Alias for error
   bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
   String? get selectedCategory => _selectedCategory;
@@ -104,43 +105,91 @@ class ListingsProvider with ChangeNotifier {
   }
 
   // Create listing
-  Future<bool> createListing(ListingModel listing) async {
+  Future<void> createListing({
+    required String name,
+    required String category,
+    required String address,
+    required String contactNumber,
+    required String description,
+    required double latitude,
+    required double longitude,
+    required String createdBy,
+  }) async {
     _setLoading(true);
     _errorMessage = null;
+
+    final listing = ListingModel(
+      name: name,
+      category: category,
+      address: address,
+      contactNumber: contactNumber,
+      description: description,
+      latitude: latitude,
+      longitude: longitude,
+      createdBy: createdBy,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
 
     final result = await _firestoreService.createListing(listing);
 
     _setLoading(false);
 
-    if (result['success']) {
-      return true;
-    } else {
+    if (!result['success']) {
       _errorMessage = result['message'];
       notifyListeners();
-      return false;
+      throw Exception(result['message']);
     }
   }
 
   // Update listing
-  Future<bool> updateListing(ListingModel listing) async {
+  Future<void> updateListing({
+    required String listingId,
+    required String name,
+    required String category,
+    required String address,
+    required String contactNumber,
+    required String description,
+    required double latitude,
+    required double longitude,
+  }) async {
     _setLoading(true);
     _errorMessage = null;
+
+    // Find the existing listing to preserve createdBy and createdAt
+    final existingListing = _allListings.firstWhere(
+      (l) => l.id == listingId,
+      orElse: () => _userListings.firstWhere((l) => l.id == listingId),
+    );
+
+    final listing = ListingModel(
+      id: listingId,
+      name: name,
+      category: category,
+      address: address,
+      contactNumber: contactNumber,
+      description: description,
+      latitude: latitude,
+      longitude: longitude,
+      createdBy: existingListing.createdBy,
+      createdAt: existingListing.createdAt,
+      updatedAt: DateTime.now(),
+      rating: existingListing.rating,
+    );
 
     final result = await _firestoreService.updateListing(listing);
 
     _setLoading(false);
 
-    if (result['success']) {
-      return true;
-    } else {
+    if (!result['success']) {
       _errorMessage = result['message'];
       notifyListeners();
-      return false;
+      throw Exception(result['message']);
     }
   }
 
   // Delete listing
-  Future<bool> deleteListing(String listingId) async {
+  Future<void> deleteListing(String listingId) async {
     _setLoading(true);
     _errorMessage = null;
 
@@ -148,12 +197,10 @@ class ListingsProvider with ChangeNotifier {
 
     _setLoading(false);
 
-    if (result['success']) {
-      return true;
-    } else {
+    if (!result['success']) {
       _errorMessage = result['message'];
       notifyListeners();
-      return false;
+      throw Exception(result['message']);
     }
   }
 

@@ -19,6 +19,9 @@ class AppConstants {
     'Shopping Mall',
   ];
 
+  // Alias for categories (used in forms)
+  static List<String> get allCategories => categories;
+
   // Kigali center coordinates (default map center)
   static const double kigaliCenterLat = -1.9441;
   static const double kigaliCenterLng = 30.0619;
