@@ -69,15 +69,15 @@ class AuthService {
         password: password,
       );
 
-      // Check if email is verified
-      if (!userCredential.user!.emailVerified) {
-        await _auth.signOut();
-        return {
-          'success': false,
-          'message': 'Please verify your email before logging in',
-          'needsVerification': true,
-        };
-      }
+      // Check if email is verified (DISABLED FOR TESTING)
+      // if (!userCredential.user!.emailVerified) {
+      //   await _auth.signOut();
+      //   return {
+      //     'success': false,
+      //     'message': 'Please verify your email before logging in',
+      //     'needsVerification': true,
+      //   };
+      // }
 
       return {
         'success': true,

@@ -6,6 +6,7 @@ import '../../utils/constants.dart';
 import '../../utils/theme.dart';
 import '../listings/listing_detail_screen.dart';
 import '../listings/create_listing_screen.dart';
+import 'map_view_screen.dart';
 
 class DirectoryScreen extends StatefulWidget {
   const DirectoryScreen({super.key});
@@ -34,6 +35,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         backgroundColor: AppTheme.primaryDark,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.map, color: AppTheme.textWhite),
+            tooltip: 'Map View',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MapViewScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add, color: AppTheme.accentGold),
             tooltip: 'Add Listing',

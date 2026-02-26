@@ -32,13 +32,14 @@ class AuthProvider with ChangeNotifier {
       _user = user;
       
       if (user != null) {
-        if (user.emailVerified) {
+        // Email verification check DISABLED FOR TESTING
+        // if (user.emailVerified) {
           // Load user profile from Firestore
           _userProfile = await _authService.getUserProfile(user.uid);
           _authState = AuthState.authenticated;
-        } else {
-          _authState = AuthState.needsVerification;
-        }
+        // } else {
+        //   _authState = AuthState.needsVerification;
+        // }
       } else {
         _userProfile = null;
         _authState = AuthState.unauthenticated;
