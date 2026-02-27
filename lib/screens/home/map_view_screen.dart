@@ -32,8 +32,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
       context,
       listen: false,
     );
-    // Use allListings instead of filteredListings to avoid index requirement
-    final listings = listingsProvider.allListings;
+    final listings = listingsProvider.filteredListings;
 
     setState(() {
       _markers = listings.map((listing) {

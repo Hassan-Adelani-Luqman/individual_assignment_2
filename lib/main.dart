@@ -7,7 +7,7 @@ import 'providers/auth_provider.dart';
 import 'providers/listings_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/email_verification_screen.dart';
-import 'screens/home/directory_screen.dart';
+import 'navigation/bottom_navigation.dart';
 
 void main() async {
   // Ensure Flutter binding is initialized
@@ -75,8 +75,8 @@ class AuthWrapper extends StatelessWidget {
               listen: false,
             ).initializeUserListingsListener(authProvider.user!.uid);
           }
-          // Show directory screen (will be wrapped in BottomNavigation in Phase 9)
-          return const DirectoryScreen();
+          // Show main app with bottom navigation
+          return const BottomNavigation();
         }
 
         // Fallback
