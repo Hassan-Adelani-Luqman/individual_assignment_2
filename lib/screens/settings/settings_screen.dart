@@ -26,7 +26,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       setState(() {
-        _notificationsEnabled = prefs.getBool(AppConstants.notificationsPrefKey) ?? true;
+        _notificationsEnabled =
+            prefs.getBool(AppConstants.notificationsPrefKey) ?? true;
         _isLoading = false;
       });
     } catch (e) {
@@ -48,9 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              value 
-                  ? 'Notifications enabled' 
-                  : 'Notifications disabled',
+              value ? 'Notifications enabled' : 'Notifications disabled',
             ),
             backgroundColor: AppTheme.accentGold,
             behavior: SnackBarBehavior.floating,
@@ -93,10 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Logout', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -125,9 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.accentGold,
-              ),
+              child: CircularProgressIndicator(color: AppTheme.accentGold),
             )
           : ListView(
               padding: const EdgeInsets.all(16),
@@ -232,10 +226,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     subtitle: const Text(
                       'Receive updates about new listings',
-                      style: TextStyle(
-                        color: AppTheme.textGray,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppTheme.textGray, fontSize: 13),
                     ),
                     value: _notificationsEnabled,
                     onChanged: _toggleNotifications,
@@ -307,10 +298,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   child: ListTile(
                     onTap: _showLogoutConfirmation,
-                    leading: const Icon(
-                      Icons.logout,
-                      color: Colors.red,
-                    ),
+                    leading: const Icon(Icons.logout, color: Colors.red),
                     title: const Text(
                       'Logout',
                       style: TextStyle(
@@ -321,10 +309,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     subtitle: const Text(
                       'Sign out of your account',
-                      style: TextStyle(
-                        color: AppTheme.textGray,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppTheme.textGray, fontSize: 13),
                     ),
                     trailing: const Icon(
                       Icons.arrow_forward_ios,
@@ -366,8 +351,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.year}';
   }

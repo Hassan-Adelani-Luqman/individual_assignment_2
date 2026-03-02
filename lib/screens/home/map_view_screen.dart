@@ -6,6 +6,7 @@ import '../../providers/listings_provider.dart';
 import '../../utils/theme.dart';
 import '../../utils/constants.dart';
 import '../listings/listing_detail_screen.dart';
+import '../listings/create_listing_screen.dart';
 
 class MapViewScreen extends StatefulWidget {
   const MapViewScreen({super.key});
@@ -16,75 +17,83 @@ class MapViewScreen extends StatefulWidget {
 
 class _MapViewScreenState extends State<MapViewScreen> {
   GoogleMapController? _mapController;
-  Set<Marker> _markers = {};
   ListingModel? _selectedListing;
+  Set<Marker> _markers = {};
+  int _listingsCount = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _createMarkers();
-    });
-  }
+  // Called ONLY after map is created - updates markers via setState so GoogleMap renders them
+  void _refreshMarkers(List<ListingModel> listings) {
+    debugPrint('🔄 Refreshing markers for ${listings.length} listings');
+    final newMarkers = <Marker>{};
 
-  void _createMarkers() {
-    final listingsProvider = Provider.of<ListingsProvider>(
-      context,
-      listen: false,
+    // Test marker at Kigali center
+    newMarkers.add(
+      Marker(
+        markerId: const MarkerId('kigali_center'),
+        position: const LatLng(AppConstants.kigaliCenterLat, AppConstants.kigaliCenterLng),
+        infoWindow: const InfoWindow(title: 'Kigali City Center'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+      ),
     );
-    final listings = listingsProvider.filteredListings;
 
-    setState(() {
-      _markers = listings.map((listing) {
-        return Marker(
+    for (final listing in listings) {
+      debugPrint('   📍 ${listing.name}: (${listing.latitude}, ${listing.longitude})');
+      newMarkers.add(
+        Marker(
           markerId: MarkerId(listing.id ?? listing.name),
           position: LatLng(listing.latitude, listing.longitude),
           infoWindow: InfoWindow(
             title: listing.name,
             snippet: listing.category,
-            onTap: () {
-              setState(() {
-                _selectedListing = listing;
-              });
-            },
           ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            _getMarkerColor(listing.category),
-          ),
+          icon: BitmapDescriptor.defaultMarker,
           onTap: () {
             setState(() {
               _selectedListing = listing;
             });
           },
-        );
-      }).toSet();
+        ),
+      );
+    }
+
+    setState(() {
+      _markers = newMarkers;
+      _listingsCount = listings.length;
+    });
+
+    debugPrint('✅ Markers updated: ${_markers.length} total');
+
+    // Move camera to fit all markers after a brief delay
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _fitMarkersInView();
     });
   }
 
-  double _getMarkerColor(String category) {
-    switch (category) {
-      case 'Hospital':
-        return BitmapDescriptor.hueRed;
-      case 'Police Station':
-        return BitmapDescriptor.hueBlue;
-      case 'Restaurant':
-      case 'Café':
-        return BitmapDescriptor.hueOrange;
-      case 'Park':
-      case 'Tourist Attraction':
-        return BitmapDescriptor.hueGreen;
-      case 'Pharmacy':
-        return BitmapDescriptor.hueRose;
-      case 'Bank':
-        return BitmapDescriptor.hueCyan;
-      case 'School':
-        return BitmapDescriptor.hueYellow;
-      case 'Hotel':
-        return BitmapDescriptor.hueMagenta;
-      case 'Shopping Mall':
-        return BitmapDescriptor.hueViolet;
-      default:
-        return BitmapDescriptor.hueRed;
+  void _fitMarkersInView() {
+    if (_mapController == null || _markers.isEmpty) return;
+    try {
+      double minLat = _markers.first.position.latitude;
+      double maxLat = _markers.first.position.latitude;
+      double minLng = _markers.first.position.longitude;
+      double maxLng = _markers.first.position.longitude;
+      for (final m in _markers) {
+        if (m.position.latitude < minLat) minLat = m.position.latitude;
+        if (m.position.latitude > maxLat) maxLat = m.position.latitude;
+        if (m.position.longitude < minLng) minLng = m.position.longitude;
+        if (m.position.longitude > maxLng) maxLng = m.position.longitude;
+      }
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat - 0.02, minLng - 0.02),
+            northeast: LatLng(maxLat + 0.02, maxLng + 0.02),
+          ),
+          60,
+        ),
+      );
+      debugPrint('📷 Camera fitted to markers');
+    } catch (e) {
+      debugPrint('❌ Camera fit error: $e');
     }
   }
 
@@ -92,10 +101,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Map View',
-          style: TextStyle(color: AppTheme.textWhite),
-        ),
+        title: const Text('Map View', style: TextStyle(color: AppTheme.textWhite)),
         backgroundColor: AppTheme.primaryDark,
         elevation: 0,
         actions: [
@@ -105,10 +111,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
             onPressed: () {
               _mapController?.animateCamera(
                 CameraUpdate.newLatLngZoom(
-                  const LatLng(
-                    AppConstants.kigaliCenterLat,
-                    AppConstants.kigaliCenterLng,
-                  ),
+                  const LatLng(AppConstants.kigaliCenterLat, AppConstants.kigaliCenterLng),
                   AppConstants.defaultZoom,
                 ),
               );
@@ -119,54 +122,114 @@ class _MapViewScreenState extends State<MapViewScreen> {
       body: Consumer<ListingsProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppTheme.accentGold),
-            );
+            return const Center(child: CircularProgressIndicator(color: AppTheme.accentGold));
           }
 
           if (provider.error != null) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 80, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error: ${provider.error}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppTheme.textGray,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
+              child: Text('Error: ${provider.error}',
+                  style: const TextStyle(color: AppTheme.textGray)),
             );
           }
 
-          // Update markers when listings change
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _createMarkers();
-          });
+          // When map is ready and listings have loaded (or changed), refresh markers
+          if (_mapController != null && provider.allListings.length != _listingsCount) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _refreshMarkers(provider.allListings);
+            });
+          }
 
           return Stack(
             children: [
               GoogleMap(
                 initialCameraPosition: const CameraPosition(
-                  target: LatLng(
-                    AppConstants.kigaliCenterLat,
-                    AppConstants.kigaliCenterLng,
-                  ),
+                  target: LatLng(AppConstants.kigaliCenterLat, AppConstants.kigaliCenterLng),
                   zoom: AppConstants.defaultZoom,
                 ),
+                // Use state-based markers - populated only after map is created
                 markers: _markers,
                 onMapCreated: (GoogleMapController controller) {
+                  debugPrint('🗺️ onMapCreated fired!');
                   _mapController = controller;
+                  // CRITICAL: Use postFrameCallback to call setState after build completes
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _refreshMarkers(provider.allListings);
+                  });
                 },
-                myLocationEnabled: true,
+                myLocationEnabled: false,
                 myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
+                zoomControlsEnabled: true,
                 mapToolbarEnabled: false,
+              ),
+
+              // Empty state overlay
+              if (provider.allListings.isEmpty)
+                Positioned.fill(
+                  child: Center(
+                    child: Container(
+                      margin: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: AppTheme.secondaryDark.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.accentGold, width: 2),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add_location_alt, size: 80, color: AppTheme.accentGold),
+                          const SizedBox(height: 24),
+                          const Text('No Listings on Map',
+                              style: TextStyle(color: AppTheme.textWhite, fontSize: 24, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 12),
+                          const Text('Create your first listing to see it here',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: AppTheme.textGray, fontSize: 16)),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () => Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => const CreateListingScreen())),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add Listing'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.accentGold,
+                              foregroundColor: AppTheme.primaryDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Debug overlay
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.secondaryDark.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.accentGold, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Listings: ${provider.allListings.length}',
+                          style: const TextStyle(color: AppTheme.textWhite, fontSize: 12, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 2),
+                      Text('Markers: ${_markers.length}',
+                          style: const TextStyle(color: AppTheme.accentGold, fontSize: 12, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 2),
+                      Text('Map: ${_mapController != null ? "Ready" : "Loading"}',
+                          style: TextStyle(
+                              color: _mapController != null ? Colors.green : Colors.orange,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
               ),
 
               // Selected listing card
@@ -178,19 +241,10 @@ class _MapViewScreenState extends State<MapViewScreen> {
                   child: Card(
                     color: AppTheme.secondaryDark,
                     elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     child: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ListingDetailScreen(listing: _selectedListing!),
-                          ),
-                        );
-                      },
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => ListingDetailScreen(listing: _selectedListing!))),
                       borderRadius: BorderRadius.circular(16),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -202,95 +256,53 @@ class _MapViewScreenState extends State<MapViewScreen> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        _selectedListing!.name,
-                                        style: const TextStyle(
-                                          color: AppTheme.textWhite,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                      Text(_selectedListing!.name,
+                                          style: const TextStyle(
+                                              color: AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.bold)),
                                       const SizedBox(height: 4),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.accentGold
-                                              .withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
+                                          color: AppTheme.accentGold.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(6),
                                         ),
-                                        child: Text(
-                                          _selectedListing!.category,
-                                          style: const TextStyle(
-                                            color: AppTheme.accentGold,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                                        child: Text(_selectedListing!.category,
+                                            style: const TextStyle(
+                                                color: AppTheme.accentGold, fontSize: 12, fontWeight: FontWeight.bold)),
                                       ),
                                     ],
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.close,
-                                    color: AppTheme.textGray,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _selectedListing = null;
-                                    });
-                                  },
+                                  icon: const Icon(Icons.close, color: AppTheme.textGray),
+                                  onPressed: () => setState(() => _selectedListing = null),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
                             Row(
                               children: [
-                                const Icon(
-                                  Icons.location_on,
-                                  color: AppTheme.accentGold,
-                                  size: 16,
-                                ),
+                                const Icon(Icons.location_on, color: AppTheme.accentGold, size: 16),
                                 const SizedBox(width: 4),
                                 Expanded(
-                                  child: Text(
-                                    _selectedListing!.address,
-                                    style: const TextStyle(
-                                      color: AppTheme.textGray,
-                                      fontSize: 14,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  child: Text(_selectedListing!.address,
+                                      style: const TextStyle(color: AppTheme.textGray, fontSize: 14),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Row(
+                            const Row(
                               children: [
-                                const Expanded(
-                                  child: Text(
-                                    'Tap for details',
-                                    style: TextStyle(
-                                      color: AppTheme.accentGold,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                Expanded(
+                                  child: Text('Tap for details',
+                                      style: TextStyle(
+                                          color: AppTheme.accentGold, fontSize: 12, fontWeight: FontWeight.bold)),
                                 ),
-                                const Icon(
-                                  Icons.arrow_forward,
-                                  color: AppTheme.accentGold,
-                                  size: 16,
-                                ),
+                                Icon(Icons.arrow_forward, color: AppTheme.accentGold, size: 16),
                               ],
                             ),
                           ],
@@ -312,3 +324,4 @@ class _MapViewScreenState extends State<MapViewScreen> {
     super.dispose();
   }
 }
+

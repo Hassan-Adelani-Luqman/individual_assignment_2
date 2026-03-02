@@ -6,15 +6,14 @@ class FirestoreService {
 
   // Stream of all listings (real-time updates)
   Stream<List<ListingModel>> getAllListingsStream() {
-    return _firestore
-        .collection('listings')
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ListingModel.fromFirestore(doc))
-              .toList(),
-        );
+    return _firestore.collection('listings').snapshots().map((snapshot) {
+      var listings = snapshot.docs
+          .map((doc) => ListingModel.fromFirestore(doc))
+          .toList();
+      // Sort in memory to avoid needing index
+      listings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return listings;
+    });
   }
 
   // Stream of user's listings (real-time updates)
@@ -22,13 +21,15 @@ class FirestoreService {
     return _firestore
         .collection('listings')
         .where('createdBy', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+        .map((snapshot) {
+          var listings = snapshot.docs
               .map((doc) => ListingModel.fromFirestore(doc))
-              .toList(),
-        );
+              .toList();
+          // Sort in memory to avoid needing composite index
+          listings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return listings;
+        });
   }
 
   // Create new listing
