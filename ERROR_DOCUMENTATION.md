@@ -444,6 +444,184 @@ defaultConfig {
 
 ---
 
+## Error #5: PigeonUserDetails Type Cast Crash on Signup and Login
+
+### When it occurred
+**Phase 3 / Ongoing** — Authentication Implementation & Testing  
+This error appeared when testing signup and login on the Android emulator (Pixel 9a, API 36). The Firebase account was being created successfully on the backend, but the app crashed before it could process the response.
+
+### Error Message
+```
+[ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception:
+type 'List<Object?>' is not a subtype of type 'PigeonUserDetails?' in type cast
+
+#0  PigeonUserDetails.decode (package:firebase_auth_platform_interface/src/pigeon/messages.pigeon.dart:401:28)
+#1  _FirebaseAuthUserHostApiCodec.readValueOfType (package:firebase_auth_platform_interface/src/pigeon/messages.pigeon.dart:1573:34)
+...
+#8  FirebaseAuthUserHostApi.reload (package:firebase_auth_platform_interface/src/pigeon/messages.pigeon.dart:1786:9)
+```
+
+The same error also appeared on any call to `User.reload()`:
+```
+type 'List<Object?>' is not a subtype of type 'PigeonUserInfo' in type cast
+```
+
+### Screenshot
+📸 **Screenshot available**: UI showing error message "An unexpected error occurred: type 'List<Object?>' is not a subtype of type 'PigeonUserDetails?' in type cast" after attempting to sign up.
+
+### What I tried first
+1. Checked Firebase Console — the user account **was** created successfully, confirming the error was on the client-side deserialization, not the server operation
+2. Added more specific `catch` blocks (`FirebaseAuthException`, `FirebaseException`) to narrow down the exception type
+3. Wrapped `signUp()` and `signIn()` in try-catch with `e.toString()` to surface the exact error to the UI
+4. Attempted `flutter pub upgrade firebase_auth firebase_core cloud_firestore` — packages were already at max within the `^4.x` constraint
+
+### Root Cause
+**Package version incompatibility between `firebase_auth 4.x` and Dart SDK 3.10.8+.**
+
+The `firebase_auth` package (v4.15.3–4.16.0) uses Pigeon-generated serialization code to communicate between Dart and the native Android Firebase SDK via platform channels. The Pigeon codegen in this version produces a `PigeonUserDetails.decode()` method that attempts to cast the response from the native layer as `PigeonUserInfo`, but the actual response from the newer Android Firebase SDK is a `List<Object?>`.
+
+This means:
+- `createUserWithEmailAndPassword()` → succeeds on Firebase server → response deserialization crashes
+- `signInWithEmailAndPassword()` → succeeds on Firebase server → response deserialization crashes
+- `User.reload()` → succeeds on Firebase server → response deserialization crashes
+
+The account is created/authenticated on the backend, but the `UserCredential` object cannot be constructed on the Dart side, throwing a `TypeError`.
+
+### Solution Applied
+**Two-part fix:**
+
+**Part 1 — Upgrade Firebase packages** (pubspec.yaml):
+```yaml
+# Before (broken)
+firebase_core: ^2.24.2
+firebase_auth: ^4.15.3
+cloud_firestore: ^4.13.6
+
+# After (fixed)
+firebase_core: ^4.5.0
+firebase_auth: ^6.2.0
+cloud_firestore: ^6.1.3
+```
+
+The newer `firebase_auth 6.x` has regenerated Pigeon code that correctly handles the serialization.
+
+**Part 2 — TypeError catch workaround** (auth_service.dart):
+As a defensive measure, added `TypeError` catch around `createUserWithEmailAndPassword` and `signInWithEmailAndPassword` calls, falling back to `_auth.currentUser` if the response fails to deserialize:
+
+```dart
+User? user;
+try {
+  final userCredential = await _auth.createUserWithEmailAndPassword(
+    email: email, password: password,
+  );
+  user = userCredential.user;
+} on TypeError {
+  // Pigeon type cast bug — account was created, fall back to currentUser
+  user = _auth.currentUser;
+}
+```
+
+**Part 3 — Replace User.reload() with getIdToken(true)** (auth_provider.dart):
+The email verification screen polled `User.reload()` every 3 seconds to check if the email was verified. This also triggered the Pigeon crash. Replaced with token refresh:
+
+```dart
+// Before (crashes)
+await _user?.reload();
+
+// After (works)
+await _user?.getIdToken(true);
+_user = _authService.currentUser;
+```
+
+### What I Learned
+- **Firebase plugin versions must match the Dart SDK** — the Pigeon code generation is tightly coupled to specific Dart/Flutter versions
+- **Server-side success ≠ client-side success** — Firebase operations can succeed on the backend while the response deserialization fails locally
+- **Always check `flutter pub outdated`** — the fix was simply upgrading to latest compatible versions
+- **Defensive error handling matters** — wrapping platform channel calls in try-catch prevents a single deserialization bug from crashing the entire auth flow
+- **Test on the actual target device early** — this bug only manifests on Android, not in `flutter analyze`
+
+### Prevention for Future
+- Run `flutter pub outdated` regularly and upgrade packages when major versions are available
+- Always wrap Firebase platform channel calls in typed catch blocks
+- Test authentication on a real device/emulator early in development, not just with static analysis
+- Monitor Firebase Flutter plugin changelogs and GitHub issues for known Pigeon bugs
+
+---
+
+## Error #6: Email Verification Race Condition — Users Bypassing Verification
+
+### When it occurred
+**Phase 3** — Testing Email Verification Enforcement  
+After implementing email verification, users could still log in and access the app without verifying their email. The verification screen also appeared briefly and then disappeared.
+
+### Error Behavior
+1. User creates account → verification email sent → user is told to verify
+2. User attempts to log in without verifying → **expected**: blocked with error message → **actual**: user enters the app briefly, sees the email verification screen for a split second, then gets fully authenticated
+3. The email verification screen mounted and its 3-second polling timer started calling `User.reload()`, which crashed with the PigeonUserInfo error (Error #5)
+
+### What I tried first
+1. Confirmed the `signIn()` method checks `user.emailVerified` and calls `signOut()` if not verified
+2. Added debug prints to trace the auth state flow
+3. Noticed the auth state listener in `AuthProvider._initAuth()` was firing *before* the `signOut()` call completed in `signIn()`
+
+### Root Cause
+**Race condition between Firebase auth state listener and the signIn() verification check.**
+
+When `signInWithEmailAndPassword()` is called:
+1. Firebase authenticates the user → `authStateChanges` stream fires with the user object
+2. The `_initAuth()` listener in `AuthProvider` immediately processes this event
+3. Since the user's `emailVerified` is `false`, the listener sets `_authState = AuthState.needsVerification`
+4. This causes the UI to navigate to the `EmailVerificationScreen`
+5. The `EmailVerificationScreen` mounts and starts its polling timer
+6. **Meanwhile**, in the `signIn()` method, the code checks `emailVerified`, finds it `false`, and calls `_auth.signOut()` — but the UI has already navigated away
+
+The net effect: the auth listener processes the sign-in event before the application code can check verification status and sign out.
+
+### Solution Applied
+**Added `_suppressAuthListener` flag** to `AuthProvider`:
+
+```dart
+bool _suppressAuthListener = false;
+
+void _initAuth() {
+  _authService.authStateChanges.listen((User? user) async {
+    if (_suppressAuthListener) return;  // Skip during signIn
+    // ... normal processing
+  });
+}
+
+Future<bool> signIn({required String email, required String password}) async {
+  _suppressAuthListener = true;   // Suppress listener before signing in
+  final result = await _authService.signIn(email: email, password: password);
+  _suppressAuthListener = false;  // Re-enable listener after
+
+  if (result['success']) {
+    // Manually update state since listener was suppressed
+    _user = _authService.currentUser;
+    _userProfile = await _authService.getUserProfile(_user!.uid);
+    _authState = AuthState.authenticated;
+    notifyListeners();
+  }
+  // ...
+}
+```
+
+This ensures the auth state listener does not process the intermediate sign-in event, allowing `signIn()` to complete its verification check and sign out if needed before the UI reacts.
+
+### What I Learned
+- **Firebase auth state listeners fire immediately** — they don't wait for application code to finish processing
+- **Race conditions in async code are subtle** — the sign-in looked correct in isolation, but the interaction with the listener created an unintended flow
+- **Suppressing listeners during critical sections** is a valid pattern when the application needs to perform multi-step operations (authenticate → check → sign out) atomically
+- **Always test the full flow** — unit testing signIn() alone wouldn't catch this; only testing the complete signup → verify → login flow on a device revealed the race condition
+
+### Prevention for Future
+- Consider using `idTokenChanges()` instead of `authStateChanges()` for more granular control
+- Design auth flows so that intermediate states don't trigger UI navigation
+- Add integration tests that cover the complete authentication flow including verification enforcement
+- Document race conditions and their solutions for future reference
+
+---
+
 ## Summary of Errors Documented
 
 | # | Error | Type | Severity | Status | Impact |
@@ -452,6 +630,8 @@ defaultConfig {
 | 2 | Android Emulator Launch Failure | Configuration | Medium | Workaround Applied | Limited testing options |
 | 3 | Firebase Web Compilation Errors | Dependency | Medium | Accepted Limitation | Web platform unavailable |
 | 4 | Kotlin DSL Configuration | Prevented | N/A | Prevented | No impact |
+| 5 | PigeonUserDetails Type Cast on Signup/Login | Firebase Auth Bug | Critical | Resolved | Blocked all authentication |
+| 6 | Email Verification Race Condition | Firebase Auth Logic | High | Resolved | Users bypassed verification |
 
 ---
 
@@ -461,8 +641,10 @@ defaultConfig {
 1. **Debugging Methodology**: Systematic root cause analysis from symptoms to solution
 2. **Platform Dependencies**: Understanding Flutter's multi-platform architecture
 3. **Build System Knowledge**: Gradle, Kotlin DSL, native toolchains
-4. **Package Management**: Dependency resolution and compatibility checking
+4. **Package Management**: Dependency resolution, compatibility checking, and major version upgrades
 5. **Virtualization**: KVM, hardware acceleration for emulators
+6. **Firebase Auth Internals**: Pigeon code generation, platform channels, and auth state listeners
+7. **Async Race Conditions**: Identifying and resolving race conditions in state management
 
 ### Development Best Practices
 1. **Environment Setup**: Verify complete development environment before coding
@@ -576,7 +758,8 @@ Code Screenshots:
 
 ---
 
-**Date Completed**: February 26, 2026  
-**Total Errors Documented**: 4 (3 encountered, 1 prevented)  
-**Phase Status**: Phase 2 Configuration Complete ✅  
-**Ready for**: Phase 3 Authentication Implementation
+**Date Started**: February 26, 2026  
+**Date Updated**: March 8, 2026  
+**Total Errors Documented**: 6 (5 encountered, 1 prevented)  
+**Phase Status**: All implementation phases (1–9) complete ✅  
+**Critical Firebase Errors Resolved**: PigeonUserDetails type cast (Error #5), Email verification race condition (Error #6)
