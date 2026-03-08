@@ -19,16 +19,32 @@ class AuthService {
     required String displayName,
   }) async {
     try {
-      // Create user account
-      UserCredential userCredential = await _auth
-          .createUserWithEmailAndPassword(email: email, password: password);
+      // Create user account.
+      // firebase_auth has a known bug where createUserWithEmailAndPassword throws
+      // a TypeError ("List<Object?> is not a subtype of PigeonUserDetails?") even
+      // though the account was successfully created on the Firebase side.
+      // We catch TypeError and fall back to currentUser to continue the flow.
+      User? user;
+      try {
+        final userCredential = await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        user = userCredential.user;
+      } on TypeError {
+        user = _auth.currentUser;
+      }
+
+      if (user == null) {
+        return {'success': false, 'message': 'Failed to create account. Please try again.'};
+      }
 
       // Send email verification
-      await userCredential.user!.sendEmailVerification();
+      await user.sendEmailVerification();
 
       // Create user profile in Firestore
-      UserModel userModel = UserModel(
-        uid: userCredential.user!.uid,
+      final userModel = UserModel(
+        uid: user.uid,
         email: email,
         displayName: displayName,
         createdAt: DateTime.now(),
@@ -36,8 +52,11 @@ class AuthService {
 
       await _firestore
           .collection('users')
-          .doc(userCredential.user!.uid)
+          .doc(user.uid)
           .set(userModel.toFirestore());
+
+      // Sign out after signup so user must verify email before accessing app
+      await _auth.signOut();
 
       return {
         'success': true,
@@ -45,8 +64,10 @@ class AuthService {
       };
     } on FirebaseAuthException catch (e) {
       return {'success': false, 'message': _getAuthErrorMessage(e.code)};
+    } on FirebaseException catch (e) {
+      return {'success': false, 'message': e.message ?? 'A Firebase error occurred'};
     } catch (e) {
-      return {'success': false, 'message': 'An unexpected error occurred'};
+      return {'success': false, 'message': 'An unexpected error occurred: ${e.toString()}'};
     }
   }
 
@@ -56,26 +77,39 @@ class AuthService {
     required String password,
   }) async {
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      // Same PigeonUserDetails TypeError workaround as signUp.
+      User? user;
+      try {
+        final userCredential = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        user = userCredential.user;
+      } on TypeError {
+        user = _auth.currentUser;
+      }
 
-      // Check if email is verified (DISABLED FOR TESTING)
-      // if (!userCredential.user!.emailVerified) {
-      //   await _auth.signOut();
-      //   return {
-      //     'success': false,
-      //     'message': 'Please verify your email before logging in',
-      //     'needsVerification': true,
-      //   };
-      // }
+      if (user == null) {
+        return {'success': false, 'message': 'Sign in failed. Please try again.'};
+      }
+
+      // Check if email is verified (ENABLED)
+      if (!user.emailVerified) {
+        await _auth.signOut();
+        return {
+          'success': false,
+          'message': 'Please verify your email before logging in',
+          'needsVerification': true,
+        };
+      }
 
       return {'success': true, 'message': 'Login successful'};
     } on FirebaseAuthException catch (e) {
       return {'success': false, 'message': _getAuthErrorMessage(e.code)};
+    } on FirebaseException catch (e) {
+      return {'success': false, 'message': e.message ?? 'A Firebase error occurred'};
     } catch (e) {
-      return {'success': false, 'message': 'An unexpected error occurred'};
+      return {'success': false, 'message': 'An unexpected error occurred: ${e.toString()}'};
     }
   }
 
@@ -139,6 +173,8 @@ class AuthService {
       };
     } on FirebaseAuthException catch (e) {
       return {'success': false, 'message': _getAuthErrorMessage(e.code)};
+    } on FirebaseException catch (e) {
+      return {'success': false, 'message': e.message ?? 'A Firebase error occurred'};
     } catch (e) {
       return {
         'success': false,

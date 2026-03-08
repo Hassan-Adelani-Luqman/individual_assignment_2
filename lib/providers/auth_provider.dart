@@ -13,6 +13,7 @@ class AuthProvider with ChangeNotifier {
   AuthState _authState = AuthState.loading;
   String? _errorMessage;
   bool _isLoading = false;
+  bool _suppressAuthListener = false;
 
   // Getters
   User? get user => _user;
@@ -29,17 +30,20 @@ class AuthProvider with ChangeNotifier {
   // Initialize auth state listener
   void _initAuth() {
     _authService.authStateChanges.listen((User? user) async {
+      // Skip processing when signIn is handling verification check
+      if (_suppressAuthListener) return;
+
       _user = user;
 
       if (user != null) {
-        // Email verification check DISABLED FOR TESTING
-        // if (user.emailVerified) {
-        // Load user profile from Firestore
-        _userProfile = await _authService.getUserProfile(user.uid);
-        _authState = AuthState.authenticated;
-        // } else {
-        //   _authState = AuthState.needsVerification;
-        // }
+        // Email verification check ENABLED
+        if (user.emailVerified) {
+          // Load user profile from Firestore
+          _userProfile = await _authService.getUserProfile(user.uid);
+          _authState = AuthState.authenticated;
+        } else {
+          _authState = AuthState.needsVerification;
+        }
       } else {
         _userProfile = null;
         _authState = AuthState.unauthenticated;
@@ -80,13 +84,29 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
     _errorMessage = null;
 
+    // Suppress auth listener to prevent race condition with verification check
+    _suppressAuthListener = true;
+
     final result = await _authService.signIn(email: email, password: password);
 
+    _suppressAuthListener = false;
     _setLoading(false);
 
     if (result['success']) {
+      // Manually trigger auth state update since we suppressed the listener
+      _user = _authService.currentUser;
+      if (_user != null) {
+        _userProfile = await _authService.getUserProfile(_user!.uid);
+        _authState = AuthState.authenticated;
+        notifyListeners();
+      }
       return true;
     } else {
+      // If signIn failed due to verification, update state accordingly
+      if (result['needsVerification'] == true) {
+        _authState = AuthState.unauthenticated;
+        notifyListeners();
+      }
       _errorMessage = result['message'];
       notifyListeners();
       return false;
@@ -114,10 +134,31 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Reload user to check verification status
+  // Uses getIdToken(true) to force token refresh instead of User.reload()
+  // which has a known PigeonUserInfo type cast bug in firebase_auth 4.x
   Future<void> reloadUser() async {
-    await _user?.reload();
-    _user = _authService.currentUser;
-    notifyListeners();
+    try {
+      // Force token refresh — this updates emailVerified without
+      // going through the buggy PigeonUserDetails.decode path
+      await _user?.getIdToken(true);
+      _user = _authService.currentUser;
+
+      // If email is now verified, update auth state
+      if (_user != null && _user!.emailVerified && _authState == AuthState.needsVerification) {
+        _userProfile = await _authService.getUserProfile(_user!.uid);
+        _authState = AuthState.authenticated;
+      }
+
+      notifyListeners();
+    } catch (e) {
+      // Fallback: re-fetch the current user without refresh
+      _user = _authService.currentUser;
+      if (_user != null && _user!.emailVerified && _authState == AuthState.needsVerification) {
+        _userProfile = await _authService.getUserProfile(_user!.uid);
+        _authState = AuthState.authenticated;
+        notifyListeners();
+      }
+    }
   }
 
   // Update notification preference

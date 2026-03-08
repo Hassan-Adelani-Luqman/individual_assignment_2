@@ -19,8 +19,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   @override
   void initState() {
     super.initState();
-    // Check verification status every 3 seconds
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    // Check verification status every 5 seconds (uses token refresh workaround)
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
       Provider.of<AuthProvider>(context, listen: false).reloadUser();
     });
   }
@@ -155,6 +155,26 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 ],
               ),
               const SizedBox(height: 32),
+              // Primary action: Sign out and log in again
+              ElevatedButton(
+                onPressed: _handleSignOut,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: AppTheme.accentGold,
+                  foregroundColor: AppTheme.primaryDark,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'I\'ve Verified — Log In',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               // Resend Button
               OutlinedButton(
                 onPressed: _isResending ? null : _handleResendEmail,

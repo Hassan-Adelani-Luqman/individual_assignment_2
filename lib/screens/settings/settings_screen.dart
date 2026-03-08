@@ -45,6 +45,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _notificationsEnabled = value;
       });
 
+      // Persist to Firestore user profile
+      if (mounted) {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        await authProvider.updateNotificationPreference(value);
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -280,7 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       subtitle: Text(
                         user.emailVerified
                             ? 'Email verified'
-                            : 'Email not verified (Testing mode)',
+                            : 'Email not verified',
                         style: const TextStyle(
                           color: AppTheme.textGray,
                           fontSize: 13,

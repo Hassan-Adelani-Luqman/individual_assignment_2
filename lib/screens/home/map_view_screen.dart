@@ -21,12 +21,10 @@ class _MapViewScreenState extends State<MapViewScreen> {
   Set<Marker> _markers = {};
   int _listingsCount = 0;
 
-  // Called ONLY after map is created - updates markers via setState so GoogleMap renders them
   void _refreshMarkers(List<ListingModel> listings) {
-    debugPrint('🔄 Refreshing markers for ${listings.length} listings');
     final newMarkers = <Marker>{};
 
-    // Test marker at Kigali center
+    // Kigali center reference marker
     newMarkers.add(
       Marker(
         markerId: const MarkerId('kigali_center'),
@@ -37,7 +35,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
     );
 
     for (final listing in listings) {
-      debugPrint('   📍 ${listing.name}: (${listing.latitude}, ${listing.longitude})');
       newMarkers.add(
         Marker(
           markerId: MarkerId(listing.id ?? listing.name),
@@ -60,8 +57,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
       _markers = newMarkers;
       _listingsCount = listings.length;
     });
-
-    debugPrint('✅ Markers updated: ${_markers.length} total');
 
     // Move camera to fit all markers after a brief delay
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -91,9 +86,8 @@ class _MapViewScreenState extends State<MapViewScreen> {
           60,
         ),
       );
-      debugPrint('📷 Camera fitted to markers');
     } catch (e) {
-      debugPrint('❌ Camera fit error: $e');
+      // Camera fit failed — map stays at default position
     }
   }
 
@@ -132,7 +126,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
             );
           }
 
-          // When map is ready and listings have loaded (or changed), refresh markers
           if (_mapController != null && provider.allListings.length != _listingsCount) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _refreshMarkers(provider.allListings);
@@ -146,12 +139,9 @@ class _MapViewScreenState extends State<MapViewScreen> {
                   target: LatLng(AppConstants.kigaliCenterLat, AppConstants.kigaliCenterLng),
                   zoom: AppConstants.defaultZoom,
                 ),
-                // Use state-based markers - populated only after map is created
                 markers: _markers,
                 onMapCreated: (GoogleMapController controller) {
-                  debugPrint('🗺️ onMapCreated fired!');
                   _mapController = controller;
-                  // CRITICAL: Use postFrameCallback to call setState after build completes
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     _refreshMarkers(provider.allListings);
                   });
@@ -201,36 +191,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
                     ),
                   ),
                 ),
-
-              // Debug overlay
-              Positioned(
-                top: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.secondaryDark.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.accentGold, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Listings: ${provider.allListings.length}',
-                          style: const TextStyle(color: AppTheme.textWhite, fontSize: 12, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 2),
-                      Text('Markers: ${_markers.length}',
-                          style: const TextStyle(color: AppTheme.accentGold, fontSize: 12, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 2),
-                      Text('Map: ${_mapController != null ? "Ready" : "Loading"}',
-                          style: TextStyle(
-                              color: _mapController != null ? Colors.green : Colors.orange,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
 
               // Selected listing card
               if (_selectedListing != null)
