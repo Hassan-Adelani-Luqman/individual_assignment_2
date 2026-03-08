@@ -144,7 +144,9 @@ class AuthProvider with ChangeNotifier {
       _user = _authService.currentUser;
 
       // If email is now verified, update auth state
-      if (_user != null && _user!.emailVerified && _authState == AuthState.needsVerification) {
+      if (_user != null &&
+          _user!.emailVerified &&
+          _authState == AuthState.needsVerification) {
         _userProfile = await _authService.getUserProfile(_user!.uid);
         _authState = AuthState.authenticated;
       }
@@ -153,7 +155,9 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       // Fallback: re-fetch the current user without refresh
       _user = _authService.currentUser;
-      if (_user != null && _user!.emailVerified && _authState == AuthState.needsVerification) {
+      if (_user != null &&
+          _user!.emailVerified &&
+          _authState == AuthState.needsVerification) {
         _userProfile = await _authService.getUserProfile(_user!.uid);
         _authState = AuthState.authenticated;
         notifyListeners();

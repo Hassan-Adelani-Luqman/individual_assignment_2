@@ -36,7 +36,10 @@ class AuthService {
       }
 
       if (user == null) {
-        return {'success': false, 'message': 'Failed to create account. Please try again.'};
+        return {
+          'success': false,
+          'message': 'Failed to create account. Please try again.',
+        };
       }
 
       // Send email verification
@@ -65,9 +68,15 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       return {'success': false, 'message': _getAuthErrorMessage(e.code)};
     } on FirebaseException catch (e) {
-      return {'success': false, 'message': e.message ?? 'A Firebase error occurred'};
+      return {
+        'success': false,
+        'message': e.message ?? 'A Firebase error occurred',
+      };
     } catch (e) {
-      return {'success': false, 'message': 'An unexpected error occurred: ${e.toString()}'};
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred: ${e.toString()}',
+      };
     }
   }
 
@@ -90,7 +99,10 @@ class AuthService {
       }
 
       if (user == null) {
-        return {'success': false, 'message': 'Sign in failed. Please try again.'};
+        return {
+          'success': false,
+          'message': 'Sign in failed. Please try again.',
+        };
       }
 
       // Check if email is verified (ENABLED)
@@ -107,9 +119,15 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       return {'success': false, 'message': _getAuthErrorMessage(e.code)};
     } on FirebaseException catch (e) {
-      return {'success': false, 'message': e.message ?? 'A Firebase error occurred'};
+      return {
+        'success': false,
+        'message': e.message ?? 'A Firebase error occurred',
+      };
     } catch (e) {
-      return {'success': false, 'message': 'An unexpected error occurred: ${e.toString()}'};
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred: ${e.toString()}',
+      };
     }
   }
 
@@ -174,7 +192,10 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       return {'success': false, 'message': _getAuthErrorMessage(e.code)};
     } on FirebaseException catch (e) {
-      return {'success': false, 'message': e.message ?? 'A Firebase error occurred'};
+      return {
+        'success': false,
+        'message': e.message ?? 'A Firebase error occurred',
+      };
     } catch (e) {
       return {
         'success': false,

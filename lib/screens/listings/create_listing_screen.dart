@@ -23,6 +23,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   final _descriptionController = TextEditingController();
   final _latitudeController = TextEditingController();
   final _longitudeController = TextEditingController();
+  final _imageUrlController = TextEditingController();
 
   String? _selectedCategory;
   bool _isLoading = false;
@@ -36,6 +37,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     _descriptionController.dispose();
     _latitudeController.dispose();
     _longitudeController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -144,6 +146,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         listen: false,
       );
 
+      final imageUrl = _imageUrlController.text.trim();
       await listingsProvider.createListing(
         name: _nameController.text.trim(),
         category: _selectedCategory!,
@@ -153,6 +156,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         latitude: double.parse(_latitudeController.text),
         longitude: double.parse(_longitudeController.text),
         createdBy: authProvider.user!.uid,
+        imageUrl: imageUrl.isEmpty ? null : imageUrl,
       );
 
       if (mounted) {
@@ -482,6 +486,34 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+
+            // Image URL (optional)
+            const Text(
+              'Image URL (optional)',
+              style: TextStyle(
+                color: AppTheme.textWhite,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _imageUrlController,
+              style: const TextStyle(color: AppTheme.textWhite),
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                hintText: 'https://example.com/image.jpg',
+                hintStyle: TextStyle(color: AppTheme.textGray.withOpacity(0.5)),
+                filled: true,
+                fillColor: AppTheme.secondaryDark,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: const Icon(Icons.image, color: AppTheme.accentGold),
+              ),
             ),
             const SizedBox(height: 32),
 

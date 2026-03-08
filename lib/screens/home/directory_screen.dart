@@ -19,6 +19,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ListingsProvider>(context, listen: false).loadUserLocation();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -215,24 +223,49 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: provider.filteredListings.length,
-                  itemBuilder: (context, index) {
-                    final listing = provider.filteredListings[index];
-                    return ListingCard(
-                      listing: listing,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ListingDetailScreen(listing: listing),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section heading: "Near You" when sorted by location,
+                    // "Services" when a category filter is active, else hidden
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Text(
+                        provider.hasLocation
+                            ? 'Near You'
+                            : provider.selectedCategory != null
+                                ? 'Services'
+                                : 'All Listings',
+                        style: const TextStyle(
+                          color: AppTheme.textWhite,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: provider.filteredListings.length,
+                        itemBuilder: (context, index) {
+                          final listing = provider.filteredListings[index];
+                          return ListingCard(
+                            listing: listing,
+                            distanceMeters: provider.distanceTo(listing),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ListingDetailScreen(listing: listing),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
               },
             ),

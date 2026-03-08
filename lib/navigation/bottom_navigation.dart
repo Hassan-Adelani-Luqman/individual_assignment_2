@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/home/directory_screen.dart';
 import '../screens/listings/my_listings_screen.dart';
 import '../screens/home/map_view_screen.dart';
+import '../screens/bookmarks/bookmarks_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../utils/theme.dart';
 
@@ -46,6 +47,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
           DirectoryScreen(),
           MapViewScreen(),
           MyListingsScreen(),
+          BookmarksScreen(),
           SettingsScreen(),
         ],
       ),
@@ -60,8 +62,13 @@ class _BottomNavigationState extends State<BottomNavigation> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark),
+            icon: Icon(Icons.list_alt),
             label: 'My Listings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bookmark_border),
+            activeIcon: Icon(Icons.bookmark),
+            label: 'Bookmarks',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

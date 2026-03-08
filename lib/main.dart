@@ -5,6 +5,7 @@ import 'utils/theme.dart';
 import 'utils/constants.dart';
 import 'providers/auth_provider.dart';
 import 'providers/listings_provider.dart';
+import 'providers/bookmarks_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/email_verification_screen.dart';
 import 'navigation/bottom_navigation.dart';
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ListingsProvider()),
+        ChangeNotifierProvider(create: (_) => BookmarksProvider()),
       ],
       child: MaterialApp(
         title: AppConstants.appName,
@@ -54,6 +56,8 @@ class AuthWrapper extends StatelessWidget {
 
         // User not authenticated - show login screen
         if (authProvider.authState == AuthState.unauthenticated) {
+          // Clear bookmarks on logout
+          Provider.of<BookmarksProvider>(context, listen: false).clear();
           return const LoginScreen();
         }
 
@@ -64,7 +68,7 @@ class AuthWrapper extends StatelessWidget {
 
         // User authenticated - show main app
         if (authProvider.authState == AuthState.authenticated) {
-          // Initialize listings listener for authenticated user
+          // Initialize listeners for authenticated user
           if (authProvider.user != null) {
             Provider.of<ListingsProvider>(
               context,
@@ -74,6 +78,11 @@ class AuthWrapper extends StatelessWidget {
               context,
               listen: false,
             ).initializeUserListingsListener(authProvider.user!.uid);
+            // Initialize bookmarks for this user
+            Provider.of<BookmarksProvider>(
+              context,
+              listen: false,
+            ).initialize(authProvider.user!.uid);
           }
           // Show main app with bottom navigation
           return const BottomNavigation();

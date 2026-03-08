@@ -25,6 +25,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
   late final TextEditingController _descriptionController;
   late final TextEditingController _latitudeController;
   late final TextEditingController _longitudeController;
+  late final TextEditingController _imageUrlController;
 
   String? _selectedCategory;
   bool _isLoading = false;
@@ -49,6 +50,9 @@ class _EditListingScreenState extends State<EditListingScreen> {
     _longitudeController = TextEditingController(
       text: widget.listing.longitude.toStringAsFixed(6),
     );
+    _imageUrlController = TextEditingController(
+      text: widget.listing.imageUrl ?? '',
+    );
     _selectedCategory = widget.listing.category;
   }
 
@@ -60,6 +64,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
     _descriptionController.dispose();
     _latitudeController.dispose();
     _longitudeController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -157,6 +162,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
         listen: false,
       );
 
+      final imageUrl = _imageUrlController.text.trim();
       await listingsProvider.updateListing(
         listingId: widget.listing.id ?? '',
         name: _nameController.text.trim(),
@@ -166,6 +172,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
         description: _descriptionController.text.trim(),
         latitude: double.parse(_latitudeController.text),
         longitude: double.parse(_longitudeController.text),
+        imageUrl: imageUrl.isEmpty ? null : imageUrl,
       );
 
       if (mounted) {
@@ -573,6 +580,34 @@ class _EditListingScreenState extends State<EditListingScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+
+            // Image URL (optional)
+            const Text(
+              'Image URL (optional)',
+              style: TextStyle(
+                color: AppTheme.textWhite,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _imageUrlController,
+              style: const TextStyle(color: AppTheme.textWhite),
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                hintText: 'https://example.com/image.jpg',
+                hintStyle: TextStyle(color: AppTheme.textGray.withOpacity(0.5)),
+                filled: true,
+                fillColor: AppTheme.secondaryDark,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: const Icon(Icons.image, color: AppTheme.accentGold),
+              ),
             ),
             const SizedBox(height: 32),
 

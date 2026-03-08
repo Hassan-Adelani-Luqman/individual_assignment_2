@@ -168,10 +168,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 ),
                 child: const Text(
                   'I\'ve Verified — Log In',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 12),
