@@ -195,6 +195,28 @@ flutter run
 
 ---
 
+## Firebase Integration Proof
+
+The following screenshots demonstrate that the app is connected to and actively using Firebase services:
+
+### Firebase Authentication Enabled
+![Firebase Auth Enabled](screenshots/firebase-auth-enabled.jpeg)
+*Firebase Console showing Email/Password authentication provider is enabled for this project.*
+
+### Firestore Database Created
+![Firestore Database Created](screenshots/firestore-database-created.png.png)
+*Firebase Console showing the Cloud Firestore database has been created and is active.*
+
+### Firestore Collections Created
+![Firestore Collections Created](screenshots/firestore-collections-created.png.png)
+*Firestore Console showing the `users` and `listings` collections with live data.*
+
+### Firestore Security Rules
+![Firestore Security Rules](screenshots/firestore-security-rules.png.png)
+*Firestore security rules published — authenticated users can read all listings; only creators can update/delete their own.*
+
+---
+
 ## Author
 
 Hassan — Individual Assignment 2  

@@ -42,6 +42,15 @@ listings/{auto-id}
 
 **Security Rules**: Any authenticated user can read all listings and create new ones. Only the original creator (`createdBy == request.auth.uid`) can update or delete their own listings.
 
+### Firebase Configuration Proof
+
+| Service | Screenshot |
+|---------|-----------|
+| Authentication (Email/Password) | ![Auth Enabled](screenshots/firebase-auth-enabled.jpeg) |
+| Firestore Database | ![DB Created](screenshots/firestore-database-created.png.png) |
+| Firestore Collections | ![Collections](screenshots/firestore-collections-created.png.png) |
+| Security Rules | ![Rules](screenshots/firestore-security-rules.png.png) |
+
 ### Data Flow Diagram
 
 ```
