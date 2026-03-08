@@ -629,6 +629,101 @@ This ensures the auth state listener does not process the intermediate sign-in e
 | 4 | Kotlin DSL Configuration | Prevented | N/A | Prevented | No impact |
 | 5 | PigeonUserDetails Type Cast on Signup/Login | Firebase Auth Bug | Critical | Resolved | Blocked all authentication |
 | 6 | Email Verification Race Condition | Firebase Auth Logic | High | Resolved | Users bypassed verification |
+| 7 | Firestore Permission Denied on Bookmarks | Security Rules | High | Resolved | Bookmarks feature completely blocked |
+
+---
+
+## Error #7: Firestore Permission Denied When Saving Bookmarks
+
+### When it occurred
+**Feature 3 (Bookmarks) — Testing on Emulator**  
+After implementing the Bookmarks feature, tapping the bookmark icon on any listing card immediately showed an error snackbar and the bookmark icon reverted to its unbookmarked state.
+
+### Error Message
+```
+[cloud_firestore/permission-denied] The caller does not have permission to execute the specified operation.
+```
+
+Visible in:
+- App UI: red snackbar "Could not save bookmark: [cloud_firestore/permission-denied]..."
+- Flutter logs:
+```
+I/flutter: BookmarksProvider error: [cloud_firestore/permission-denied]...
+I/flutter: [BookmarksProvider] toggle error: [cloud_firestore/permission-denied]...
+```
+
+### Screenshot
+![Bookmark Permission Denied](screenshots/bookmark-permission-denied.jpeg)
+*App showing red error snackbar after tapping the bookmark icon — Firestore permission-denied error visible on screen.*
+
+### What I tried first
+1. Confirmed the user was authenticated (auth state = `authenticated`, `user.uid` was valid)
+2. Confirmed `listing.id` was not null by logging it
+3. Checked the `BookmarkService.toggleBookmark()` code — logic was correct
+4. Noticed the error code was `cloud_firestore/permission-denied`, pointing to security rules, not application code
+
+### Root Cause
+**Firestore security rules did not include a rule for the `bookmarks` collection.**
+
+The existing rules only covered `users` and `listings`. When the app tried to read or write to `bookmarks/{userId}_{listingId}`, Firestore fell back to the default **deny all** policy.
+
+Additionally, the initial fix attempt had a subtle bug in the rule:
+```js
+// Incorrect (combined read+write with resource.data — fails on create)
+match /bookmarks/{bookmarkId} {
+  allow read, write: if request.auth != null
+    && request.auth.uid == resource.data.userId;  // ← resource.data doesn't exist yet on create!
+}
+```
+For `create` operations, `resource.data` refers to the non-existent document, so the condition always evaluates to `false`. The `create` rule must use `request.resource.data` (the incoming document) instead.
+
+### Solution Applied
+**Updated Firestore security rules in Firebase Console → Firestore Database → Rules:**
+
+```js
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    match /listings/{listingId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth.uid == resource.data.createdBy;
+    }
+
+    // Bookmarks rule — split by operation to use correct context object
+    match /bookmarks/{bookmarkId} {
+      // read and delete: document exists → use resource.data
+      allow read, delete: if request.auth != null
+        && request.auth.uid == resource.data.userId;
+      // create: document doesn't exist yet → use request.resource.data
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.userId;
+    }
+  }
+}
+```
+
+Key distinction:
+| Operation | Correct object | Reason |
+|-----------|---------------|--------|
+| `read`, `delete` | `resource.data` | Document already exists |
+| `create` | `request.resource.data` | Document is being written, doesn't exist yet |
+
+### What I Learned
+- **Firestore rules are silently deny-all for unconfigured collections** — no error message from Firebase to hint that the collection is missing from rules; the only indication is `permission-denied`
+- **`resource` vs `request.resource` is a common Firestore rules pitfall**: `resource` is the existing document, `request.resource` is the incoming document in a write. Using `resource.data` in a `create` rule always results in a null reference
+- **Always update security rules when adding new Firestore collections** — the app code can be perfect, but without rules the feature is completely blocked
+- **Error handling with UI feedback is critical** — without the snackbar added to the bookmark button, the failure would have been completely invisible to the user (the optimistic UI update would revert silently)
+
+### Prevention for Future
+- Add Firestore security rules as the **first step** when creating a new collection, before writing app code
+- Review the rules for all collections whenever a new feature touches Firestore
+- Use the Firebase Rules Playground to test rules before deploying
 
 ---
 
@@ -739,6 +834,7 @@ Firebase Console:
 
 Error Screenshots:
 - [x] Error #5: PigeonUserDetails crash → `screenshots/error.jpeg`
+- [x] Error #7: Bookmark permission denied → `screenshots/bookmark-permission-denied.jpeg`
 
 Note: Error #1–#3 occurred on a different machine (Linux) before moving to Windows.
 
@@ -746,6 +842,6 @@ Note: Error #1–#3 occurred on a different machine (Linux) before moving to Win
 
 **Date Started**: February 26, 2026  
 **Date Updated**: March 8, 2026  
-**Total Errors Documented**: 6 (5 encountered, 1 prevented)  
+**Total Errors Documented**: 7 (6 encountered, 1 prevented)  
 **Phase Status**: All implementation phases (1–9) complete ✅  
-**Critical Firebase Errors Resolved**: PigeonUserDetails type cast (Error #5), Email verification race condition (Error #6)
+**Critical Firebase Errors Resolved**: PigeonUserDetails type cast (Error #5), Email verification race condition (Error #6), Firestore permission denied on bookmarks (Error #7)

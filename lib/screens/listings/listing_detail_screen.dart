@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/listing_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/bookmarks_provider.dart';
 import '../../utils/theme.dart';
 import 'edit_listing_screen.dart';
 
@@ -11,6 +13,20 @@ class ListingDetailScreen extends StatelessWidget {
   final ListingModel listing;
 
   const ListingDetailScreen({super.key, required this.listing});
+
+  Widget _buildImagePlaceholder() {
+    return Container(
+      height: 160,
+      color: AppTheme.secondaryDark,
+      child: const Center(
+        child: Icon(
+          Icons.image_not_supported,
+          color: AppTheme.textGray,
+          size: 48,
+        ),
+      ),
+    );
+  }
 
   Future<void> _launchPhone(String phoneNumber) async {
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
@@ -45,28 +61,85 @@ class ListingDetailScreen extends StatelessWidget {
         ),
         backgroundColor: AppTheme.primaryDark,
         elevation: 0,
-        actions: isOwner
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: AppTheme.accentGold),
-                  tooltip: 'Edit',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EditListingScreen(listing: listing),
-                      ),
-                    );
-                  },
+        actions: [
+          // Bookmark icon (always visible)
+          Consumer<BookmarksProvider>(
+            builder: (context, bookmarksProvider, _) {
+              final isBookmarked = bookmarksProvider.isBookmarked(
+                listing.id ?? '',
+              );
+              return IconButton(
+                icon: Icon(
+                  isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  color: AppTheme.accentGold,
                 ),
-              ]
-            : null,
+                tooltip: isBookmarked ? 'Remove bookmark' : 'Add bookmark',
+                onPressed: () async {
+                  if (authProvider.user != null && listing.id != null) {
+                    try {
+                      await bookmarksProvider.toggle(
+                        authProvider.user!.uid,
+                        listing.id!,
+                      );
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Could not save bookmark: $e'),
+                            backgroundColor: Colors.red[700],
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
+              );
+            },
+          ),
+          // Edit button (only for owner)
+          if (isOwner)
+            IconButton(
+              icon: const Icon(Icons.edit, color: AppTheme.accentGold),
+              tooltip: 'Edit',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditListingScreen(listing: listing),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Hero image
+            if (listing.imageUrl != null && listing.imageUrl!.isNotEmpty)
+              SizedBox(
+                height: 220,
+                width: double.infinity,
+                child: CachedNetworkImage(
+                  imageUrl: listing.imageUrl!,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: AppTheme.secondaryDark,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppTheme.accentGold,
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) =>
+                      _buildImagePlaceholder(),
+                ),
+              )
+            else
+              _buildImagePlaceholder(),
+
             // Header with category
             Container(
               padding: const EdgeInsets.all(24),
