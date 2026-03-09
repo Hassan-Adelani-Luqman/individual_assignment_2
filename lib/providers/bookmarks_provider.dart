@@ -70,7 +70,12 @@ class BookmarksProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      await _service.toggleBookmark(userId, listingId);
+      // Pass current state so the service never needs to read Firestore first
+      await _service.toggleBookmark(
+        userId,
+        listingId,
+        isCurrentlyBookmarked: wasBookmarked,
+      );
       return !wasBookmarked; // Return new status
     } catch (e) {
       // Revert on error

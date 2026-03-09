@@ -43,12 +43,12 @@ class _BottomNavigationState extends State<BottomNavigation> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children: const [
-          DirectoryScreen(),
-          MapViewScreen(),
-          MyListingsScreen(),
-          BookmarksScreen(),
-          SettingsScreen(),
+        children: [
+          const DirectoryScreen(),
+          const MapViewScreen(),
+          const MyListingsScreen(),
+          BookmarksScreen(onBrowseDirectory: () => _onItemTapped(0)),
+          const SettingsScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

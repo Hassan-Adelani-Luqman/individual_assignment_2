@@ -11,24 +11,18 @@ class BookmarkService {
   /// Creates a unique document ID for a bookmark
   String _docId(String userId, String listingId) => '${userId}_$listingId';
 
-  /// Toggles bookmark status for a listing.
-  /// If bookmarked, removes it. If not bookmarked, adds it.
-  Future<void> toggleBookmark(String userId, String listingId) async {
-    final ref = _firestore
-        .collection(AppConstants.bookmarksCollection)
-        .doc(_docId(userId, listingId));
-
-    final doc = await ref.get();
-    if (doc.exists) {
-      // Remove bookmark
-      await ref.delete();
+  /// Toggles bookmark status for a listing based on [isCurrentlyBookmarked].
+  /// Avoids a read-first check (which fails on non-existent documents due to
+  /// Firestore rules using resource.data on potentially null documents).
+  Future<void> toggleBookmark(
+    String userId,
+    String listingId, {
+    required bool isCurrentlyBookmarked,
+  }) async {
+    if (isCurrentlyBookmarked) {
+      await removeBookmark(userId, listingId);
     } else {
-      // Add bookmark
-      await ref.set({
-        'userId': userId,
-        'listingId': listingId,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      await addBookmark(userId, listingId);
     }
   }
 

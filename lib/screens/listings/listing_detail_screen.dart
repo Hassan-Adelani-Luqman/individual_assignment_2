@@ -8,6 +8,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/bookmarks_provider.dart';
 import '../../utils/theme.dart';
 import 'edit_listing_screen.dart';
+import 'rate_listing_screen.dart';
+import 'reviews_screen.dart';
 
 class ListingDetailScreen extends StatelessWidget {
   final ListingModel listing;
@@ -177,25 +179,43 @@ class ListingDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Rating
+                  // Rating (tappable → Reviews screen)
                   if (listing.rating != null && listing.rating! > 0)
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.star,
-                          color: AppTheme.accentGold,
-                          size: 20,
+                    InkWell(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ReviewsScreen(listing: listing),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${listing.rating!.toStringAsFixed(1)} rating',
-                          style: const TextStyle(
-                            color: AppTheme.textWhite,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                      ),
+                      child: Row(
+                        children: [
+                          ...List.generate(
+                            5,
+                            (i) => Icon(
+                              i < listing.rating!.round()
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              color: AppTheme.accentGold,
+                              size: 18,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Text(
+                            '${listing.reviewCount ?? 0} ${(listing.reviewCount ?? 0) == 1 ? 'review' : 'reviews'}',
+                            style: const TextStyle(
+                              color: AppTheme.textGray,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: AppTheme.textGray,
+                          ),
+                        ],
+                      ),
                     ),
                 ],
               ),
@@ -222,6 +242,35 @@ class ListingDetailScreen extends StatelessWidget {
                       color: AppTheme.textGray,
                       fontSize: 15,
                       height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Rate this service button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              RateListingScreen(listing: listing),
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.accentGold,
+                        foregroundColor: AppTheme.primaryDark,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Rate this service',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
                   ),
                 ],

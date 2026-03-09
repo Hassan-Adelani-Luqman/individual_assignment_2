@@ -39,6 +39,7 @@ class AppConstants {
   static const String usersCollection = 'users';
   static const String listingsCollection = 'listings';
   static const String bookmarksCollection = 'bookmarks';
+  static const String reviewsCollection = 'reviews';
 
   // SharedPreferences keys
   static const String notificationsPrefKey = 'notifications_enabled';

@@ -6,6 +6,7 @@ import 'utils/constants.dart';
 import 'providers/auth_provider.dart';
 import 'providers/listings_provider.dart';
 import 'providers/bookmarks_provider.dart';
+import 'providers/reviews_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/email_verification_screen.dart';
 import 'navigation/bottom_navigation.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ListingsProvider()),
         ChangeNotifierProvider(create: (_) => BookmarksProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewsProvider()),
       ],
       child: MaterialApp(
         title: AppConstants.appName,

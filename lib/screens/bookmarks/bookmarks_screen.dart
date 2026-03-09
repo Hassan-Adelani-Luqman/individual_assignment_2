@@ -9,10 +9,19 @@ import '../listings/listing_detail_screen.dart';
 
 /// Screen displaying all bookmarked listings for the current user.
 ///
-/// Shows a toggle switch at the top and a list of saved places.
-/// Displays an empty state when no bookmarks exist.
-class BookmarksScreen extends StatelessWidget {
-  const BookmarksScreen({super.key});
+/// Shows a toggle switch at the top to sort listings A–Z, and a list of
+/// saved places. Displays an empty state when no bookmarks exist.
+class BookmarksScreen extends StatefulWidget {
+  final VoidCallback? onBrowseDirectory;
+
+  const BookmarksScreen({super.key, this.onBrowseDirectory});
+
+  @override
+  State<BookmarksScreen> createState() => _BookmarksScreenState();
+}
+
+class _BookmarksScreenState extends State<BookmarksScreen> {
+  bool _sortAlphabetically = false;
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +48,17 @@ class BookmarksScreen extends StatelessWidget {
                 );
               }
 
-              final bookmarkedListings = bookmarksProvider
+              var bookmarkedListings = bookmarksProvider
                   .getBookmarkedListings(listingsProvider.allListings);
+
+              if (_sortAlphabetically) {
+                bookmarkedListings = List.from(bookmarkedListings)
+                  ..sort((a, b) => a.name.compareTo(b.name));
+              }
 
               return Column(
                 children: [
-                  // Header with toggle indicator
+                  // Header with sort toggle
                   Container(
                     margin: const EdgeInsets.all(16),
                     padding: const EdgeInsets.symmetric(
@@ -58,18 +72,19 @@ class BookmarksScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Bookmarks',
-                          style: TextStyle(
+                        Text(
+                          _sortAlphabetically ? 'Sort: A–Z' : 'Sort: Recent',
+                          style: const TextStyle(
                             color: AppTheme.textWhite,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        // Toggle indicator showing bookmark status
+                        // Toggle to switch sort order
                         Switch(
-                          value: bookmarkedListings.isNotEmpty,
-                          onChanged: null, // Read-only indicator
+                          value: _sortAlphabetically,
+                          onChanged: (val) =>
+                              setState(() => _sortAlphabetically = val),
                           activeColor: AppTheme.accentGold,
                           activeTrackColor: AppTheme.accentGold.withOpacity(
                             0.3,
@@ -135,19 +150,7 @@ class BookmarksScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              onPressed: () {
-                // Navigate to directory (first tab)
-                // This is handled by the bottom navigation, so we can use DefaultTabController
-                // or just show a message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Browse the directory to find places to bookmark',
-                    ),
-                    backgroundColor: AppTheme.secondaryDark,
-                  ),
-                );
-              },
+              onPressed: widget.onBrowseDirectory,
               icon: const Icon(Icons.explore),
               label: const Text('Browse Directory'),
               style: ElevatedButton.styleFrom(
